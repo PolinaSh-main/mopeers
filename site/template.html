@@ -298,6 +298,7 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
   <h3 style="margin-top:32px">6. Внешняя проверка</h3>
   <p class="muted small" id="mobNote"></p>
   <div class="tablewrap"><table id="mobTable"></table></div>
+  <p class="muted small" id="newsNote" style="margin-top:12px"></p>
   <p class="small muted" style="margin-top:12px">Полное описание — в методологическом отчёте, код и конфигурации — в репозитории.</p>
 </div></section>
 
@@ -727,8 +728,13 @@ function drawChecks() {
   document.getElementById('mobTable').innerHTML = '<tr><th>Тип</th><th class="num">МО в СЗФО</th><th class="num">Мобильность, км</th></tr>' +
     mb.by_type.map(r => `<tr><td><i class="dot" style="background:${tColor(r.type)}"></i> ${esc(T[r.type].name)}</td><td class="num">${r.count}</td><td class="num">${r.mobility_km.toFixed(2).replace('.', ',')}</td></tr>`).join('');
 }
+function drawNews() {
+  const n = METH.news; if (!n) return;
+  const pc = v => Math.round(v * 100) + '%';
+  document.getElementById('newsNote').textContent = `Проверка флага расхождения новостями. Для 167 МО с флагом и 167 МО без флага того же типа собраны заголовки 2024 года, где названо само МО (${fmt.format(n.n_titles)} заголовков по ${n.n_mo} МО), и размечены открытой моделью GigaChat 3.1: затрагивает ли событие экономику МО. Экономические события нашлись у ${pc(n.div)} МО с флагом и у ${pc(n.ctrl)} МО без флага (p = ${n.p.toFixed(2).replace('.', ',')}): связь не обнаружена. У типичного МО 2–3 заголовка за год, поэтому такая проверка заметила бы только сильную связь; следующий шаг — местные источники новостей.`;
+}
 function redrawAll() { drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); if (current) select(current.id, false); }
-drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); newRound();
+drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); drawNews(); newRound();
 const start = +params.get('mo') || (MO.find(d => d.n === 'Комсомольск-на-Амуре') || MO[0]).id;
 select(start, false);
 </script>

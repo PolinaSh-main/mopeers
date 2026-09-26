@@ -100,7 +100,16 @@ def collect(cfg):
     mobt = pd.read_csv(out / "interpret" / "mobility_test.csv", index_col=0).iloc[:, 0]
     stab = out / "typology" / "stability.csv"
     stab = pd.read_csv(stab)[["ari_macro", "ari_types"]].describe().round(3).to_dict() if stab.exists() else None
+    nw = out / "news" / "divergence_vs_control.csv"
+    news = None
+    if nw.exists():
+        nt = pd.read_csv(nw).set_index("category")
+        nn = pd.read_parquet(out / "news" / "news.parquet")
+        a = nt.loc["любое экономическое событие"]
+        news = {"n_titles": len(nn), "n_mo": int(nn.territory_id.nunique()), "div": _r(a.share_divergent, 3),
+                "ctrl": _r(a.share_control, 3), "p": _r(a.p_value, 3)}
     method = {
+        "news": news,
         "mobility": {"by_type": mob.round(3).to_dict("records"), "test": {k: _r(v, 6) for k, v in mobt.items()}},
         "stability": stab,
         "rules": net.round(4).to_dict("records"),
