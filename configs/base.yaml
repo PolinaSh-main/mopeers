@@ -1,0 +1,120 @@
+# Все пути — относительно корня проекта.
+paths:
+  raw: data/raw
+  processed: data/processed
+  outputs: outputs
+  consumption: data/raw/contest2026/hackathonlicence/consumption.parquet
+  connection: data/raw/contest2026/hackathonlicence/connection.parquet
+  market_access: data/raw/contest2026/hackathonlicence/market_access.parquet
+  population: data/raw/2_bdmo_population.parquet
+  migration: data/raw/3_bdmo_migration.parquet
+  salary: data/raw/4_bdmo_salary.parquet
+  mobility: data/raw/sberindex_api/indeks-mobilnosti.parquet
+  mo_dict: data/raw/borders/t_dict_municipal_districts.xlsx
+  mo_poly: data/raw/borders/t_dict_municipal_districts_poly.gpkg
+  rosstat_catalog: data/processed/rosstat_catalog.csv
+  rosstat_dir: data/raw/rosstat
+  third_party: third_party
+
+rosstat:
+  base_url: https://storage.yandexcloud.net/tochno-st-catalog/Rosstat/data_bdmo_118_v20250918/by_indicator/
+  suffix: 112_v20250918
+  sections: [1, 2, 3, 5, 6, 7, 8, 9, 12, 13, 16, 18, 19, 20, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 50, 70]
+  years: [2022, 2023, 2024]
+  # Показатели, которые взял IvanFrolovskiy/sberindex-atlas, плюс отобранные по каталогу
+  # (отбор и обоснование — data/processed/indicators.csv).
+  base_codes: [Y48112027, Y48423007, Y48423005]
+  context:                       # показатель: код Росстата, фильтр разреза, нормировка
+    urban_share: {code: Y48112027, filters: {mest: Городское население}, per: ratio, base_code: Y48112027, base_filters: {mest: Все население}}
+    births_per_1000: {code: Y48112003, per: capita, scale: 1000}
+    deaths_per_1000: {code: Y48112001, per: capita, scale: 1000}
+    retail_pc: {code: Y48401003, filters: {okved2: Всего по обследуемым}, period: Январь-декабрь, per: capita, scale: 1000}
+    catering_pc: {code: Y48401006, filters: {okved2: Всего по обследуемым}, period: Январь-декабрь, per: capita, scale: 1000}
+    paid_services_pc: {code: Y48401111, per: capita, scale: 1000}
+    invest_pc: {code: Y48109001, filters: {istinv: Всего, okved2: Всего по обследуемым}, per: capita, scale: 1000}
+    housing_m2_pc: {code: Y48008019, filters: {schil: Весь жилищный фонд}, per: capita, scale: 1000}
+    agri_pc: {code: Y48007010, filters: {kategor: Хозяйства всех категорий}, per: capita, scale: 1000}
+    jobs_per_capita: {code: Y48423005, filters: {okved2: Всего по обследуемым}, per: capita}
+    emp_mining_share: {code: Y48423005, filters: {okved2: Добыча полезных}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
+    emp_manufacturing_share: {code: Y48423005, filters: {okved2: Обрабатывающие}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
+    emp_public_share: {code: Y48423005, filters: {okved2: Государственное управление}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
+    emp_agri_share: {code: Y48423005, filters: {okved2: "Сельское, лесное"}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
+
+# Код жюри: скачивается с зафиксированного коммита, в репозиторий не копируется.
+third_party:
+  kefrin:
+    repo: Sorooshi/KEFRiN
+    commit: f9f96b1a778cb8d2e5ba85baae452dc813c4f110
+    files: [kefrin.py, processing_tools.py, data/SyntheticData/synthetic_data_generator.py]
+  pattern:
+    repo: Sorooshi/Pattern
+    commit: e5ff50b34a1bbd723b9ae2e46c122a06e782daea
+    files: [metrics/clustering_metrics.py]
+
+features:
+  first_window_end: "2024-01"   # окна 12 мес. с концом в каждом месяце 2024 г.
+  min_months: 10                # МО входит в окно, если есть ≥ 10 месяцев из 12
+
+network:
+  rules: [structure, corr, lagcorr, dtw, road, fused]
+  k: 10                 # соседей на МО при разрежении
+  max_lag: 2            # месяцев для lagcorr
+  dtw_radius: 2         # окно Сакоэ–Тибы для DTW, мес.
+  road_scale_km: 150    # масштаб затухания близости по дороге
+
+seed: 0
+
+cluster:
+  rules: [fused, structure, road, dtw]   # первое правило — индексы сети для методов без сети
+  methods: [kefrin, leiden, spectral, kmeans, gmm, ward]
+  k_range: [2, 3, 4, 5, 6, 7, 8, 10, 12]
+  window_features: [share_Продовольствие, share_Общественное питание, share_Здоровье, share_Транспорт,
+                    share_Маркетплейсы, share_Прочее, log_spend, growth_yoy_3m, season_amp, volatility,
+                    spend_to_salary]
+  context_features: [population, share_65plus, share_0_15, pop_growth, net_migration_per_1000, salary,
+                     salary_growth, market_access, urban_share, births_per_1000, retail_pc, paid_services_pc,
+                     invest_pc, housing_m2_pc, jobs_per_capita, emp_mining_share, emp_manufacturing_share,
+                     emp_public_share, emp_agri_share]
+  log_features: [population, salary, market_access, retail_pc, paid_services_pc, invest_pc, housing_m2_pc,
+                 jobs_per_capita]
+  clip_z: 5              # стандартизованные признаки обрезаются на ±clip_z
+  kefrin_xi: 1.0         # вес сети в KEFRiN (вес признаков rho = 1)
+  kefrin_n_init: 3
+  xi_grid: [0, 1, 2, 5, 10, 20, 50]   # перебор веса сети
+  xi_k: [4, 8]
+
+synthetic:            # проверка выбора K на синтетике генератором Шалилеха (репозиторий KEFRiN)
+  n_nodes: 400
+  n_features: 19      # как в реальной матрице признаков
+  k_true: [5, 7, 9]
+  pr_v: [0.7, 0.9]    # смешение кластеров по признакам: меньше — сильнее перекрытие
+  p_within: 0.08
+  p_between: 0.01
+  noise_features: 2
+  repeats: 2
+
+dynamics:             # типология — mopeers.typology по окну 2024 г.; окна — отнесение к ближайшему центру
+  drift_quantile: 0.95
+
+product:
+  n_peers: 15             # сопоставимых МО по всей стране
+  n_local: 5              # сопоставимых МО в радиусе radius_km
+  radius_km: 300
+  n_experience: 3         # лидеров роста среди сопоставимых
+  potential_metrics: [spend_month, growth_2024, share_Общественное питание, share_Маркетплейсы, spend_to_salary, salary]
+
+geo:
+  simplify: 4%
+
+interpret:
+  fca_attrs: 8          # атрибутов с наибольшим подъёмом для решётки понятий типа
+  tree_depth: 3
+  tree_min_leaf: 20
+
+typology:             # двухуровневая типология; xi — по outputs/cluster/kefrin_xi.csv
+  method: kefrin
+  rule: fused
+  xi: 2.0
+  k_macro: [2, 3, 4, 5, 6, 7, 8]
+  k_sub: [2, 3, 4, 5]
+  min_split_size: 60   # макротип меньше этого не делится

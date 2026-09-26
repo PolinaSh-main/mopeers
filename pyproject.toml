@@ -1,0 +1,35 @@
+[project]
+name = "mopeers"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Polina Shevyakova", email = "pasheviakova@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fcapy>=0.1.4.5",
+    "geopandas>=1.1.4",
+    "leidenalg>=0.12.0",
+    "matplotlib>=3.11.2",
+    "networkx>=3.7",
+    "numpy>=2.5.3",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.6",
+    "pyarrow>=25.0.1",
+    "pyogrio>=0.13.0",
+    "python-igraph>=1.0.0",
+    "pyyaml>=6.0.3",
+    "remotezip>=0.12.6",
+    "s-dbw>=0.4.0",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tslearn>=0.9.0",
+]
+
+[project.scripts]
+mopeers = "mopeers:main"
+
+[build-system]
+requires = ["uv_build>=0.9.28,<0.10.0"]
+build-backend = "uv_build"

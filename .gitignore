@@ -1,0 +1,30 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+data/raw/
+data/processed/rosstat_catalog.csv
+competitors/
+third_party/
+outputs/cache/
+*.gguf
+page.txt
+Онлайн-конкурс Сбериндекса_files/
+Онлайн-конкурс Сбериндекса.html
+Команда СберИндекса телеграм канал/
+outputs/*.log
+data/processed/
+site/vendor/
+# рабочие документы — только локально
+CLAUDE.md
+PLAN.md
+JOURNAL.md
+STATE.md
+data/telegram.txt
+docs/
