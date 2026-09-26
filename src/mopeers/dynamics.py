@@ -1,8 +1,11 @@
 """Этап 5: как меняются типы МО по 12 окнам 2024 года.
 
-Типология строится один раз по опорному окну (`mopeers.typology`, окно 2024-01…2024-12). В каждом окне МО
-относится к типу с ближайшим центром в пространстве признаков; признаки стандартизуются по всем окнам сразу,
-поэтому центры и МО разных окон сравнимы. Изменение видно двумя способами:
+Типология строится один раз по опорному окну (`mopeers.typology`, окно 2024-01…2024-12). Центры типов — средние
+признаков МО каждого типа в опорном окне. В каждом окне признаки стандартизуются внутри окна: общий для страны
+сдвиг (например, рост доли маркетплейсов у всех) вычитается, и остаётся положение МО относительно страны в этом
+окне. МО относится к типу с ближайшим центром; это же правило применяется и к опорному окну, поэтому переходы
+сравнивают одинаково полученные метки. Доля совпадения правила с типами KEFRiN на опорном окне сохраняется
+(`agreement_reference.csv`): расходятся МО, которых в тип KEFRiN отнесла сеть. Изменение видно двумя способами:
 - переходы МО между типами от окна к окну (матрица переходов);
 - смещение центров типов — центры пересчитываются по МО, отнесённым к типу в каждом окне.
 
@@ -25,9 +28,12 @@ def build(cfg=None):
     mo = pd.read_parquet(proc / "mo.parquet")
     types = pd.read_parquet(path(cfg, "outputs") / "typology" / "types.parquet").type
     feats = feats[feats.territory_id.isin(mo.index)]
-    allx, _ = feature_matrix(feats, ctx, list(feats.territory_id), cfg)
-    allx.index = pd.MultiIndex.from_arrays([feats.window_end.to_numpy(), feats.territory_id.to_numpy()])
     ends = sorted(feats.window_end.unique())
+    parts = {}
+    for e in ends:  # стандартизация внутри окна
+        fe = feats[feats.window_end == e]
+        parts[e] = feature_matrix(fe, ctx, list(fe.territory_id), cfg)[0]
+    allx = pd.concat(parts)
     ref = allx.loc[ends[-1]]
     ref = ref.loc[ref.index.intersection(types.index)]
     names = sorted(types.unique())
@@ -70,11 +76,14 @@ def build(cfg=None):
     last = labels[ends[-1]]
     flags = pd.DataFrame({"type": types.reindex(labels.index), "type_nearest_last": last,
                           "type_first": labels[ends[0]], "drift_slope": slope})
-    flags["moved"] = flags.type.notna() & flags.type_first.notna() & (flags.type_first != flags.type)
+    flags["moved"] = flags.type_first.notna() & flags.type_nearest_last.notna() &         (flags.type_first != flags.type_nearest_last)
+    agree = flags.dropna(subset=["type", "type_nearest_last"])
+    pd.Series({"agreement": float((agree.type == agree.type_nearest_last).mean()), "n": len(agree)})         .to_csv(out / "agreement_reference.csv")
     flags["drifting"] = flags.drift_slope > flags.drift_slope.quantile(dc["drift_quantile"])
     flags["divergence"] = flags.moved | flags.drifting
     flags.to_parquet(out / "divergence.parquet")
     stay = float(np.trace(step_total.to_numpy()) / step_total.to_numpy().sum())
+    print("совпадение правила с типами KEFRiN на опорном окне:", round(float((agree.type == agree.type_nearest_last).mean()), 3))
     print("доля МО, сохраняющих тип от окна к окну:", round(stay, 3),
           "| сменили тип за год:", int(flags.moved.sum()), "| флаг расхождения:", int(flags.divergence.sum()))
     return labels, flags

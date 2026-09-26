@@ -117,11 +117,16 @@ def compare(cfg=None, end=None):
     dist = road_distances(cfg, ids)
     from .cluster import feature_matrix
     ctx = pd.read_parquet(proc / "context.parquet")
-    x = feature_matrix(f.reset_index(), ctx, ids, cfg)[0].to_numpy()  # те же 30 признаков, что в кластеризации
+    xdf = feature_matrix(f.reset_index(), ctx, ids, cfg)[0]
+    x = xdf.to_numpy()  # те же 30 признаков, что в кластеризации
+    # проверка без замкнутости: только признаки, которые не участвуют ни в одном правиле ребра
+    # (контекст Росстата и доступность рынков; доли трат и ряды трат исключены)
+    xc = xdf[[c for c in cfg["cluster"]["context_features"] if c in xdf.columns]].to_numpy()
     region = mo.loc[ids, "region_code"].to_numpy()
     rng = np.random.default_rng(0)
     ri, rj = rng.integers(0, len(ids), 20000), rng.integers(0, len(ids), 20000)
     base = np.abs(x[ri] - x[rj]).mean()
+    base_c = np.abs(xc[ri] - xc[rj]).mean()
     rows, parts, graphs = [], {}, {}
     for rule in cfg["network"]["rules"]:
         a = knn_graph(similarity(rule, f, panel, ids, months, dist, cfg), cfg["network"]["k"])
@@ -134,6 +139,7 @@ def compare(cfg=None, end=None):
             "rule": rule, "edges": len(i),
             "same_region_share": float((region[i] == region[j]).mean()),
             "feature_homophily": float(1 - np.abs(x[i] - x[j]).mean() / base),
+            "context_homophily": float(1 - np.abs(xc[i] - xc[j]).mean() / base_c),
             "leiden_modularity": float(p.modularity), "leiden_communities": len(set(p.membership)),
             "median_edge_km": float(np.median(dist[i, j][np.isfinite(dist[i, j])])),
         })

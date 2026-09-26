@@ -35,18 +35,19 @@ def collect(cfg):
     peers = pd.read_parquet(out / "dataset" / "mo_peers.parquet").set_index("territory_id")
     prof_z = pd.read_csv(out / "interpret" / "profile_z.csv", index_col=0)
     prof_m = pd.read_csv(out / "interpret" / "profile_median.csv", index_col=0)
-    fca = pd.DataFrame(json.loads((out / "interpret" / "fca_descriptions.json").read_text(encoding="utf-8")))
-    fca["type"] = fca["type"].astype(str)
+    pat = pd.DataFrame(json.loads((out / "interpret" / "interval_patterns.json").read_text(encoding="utf-8")))
+    pat["type"] = pat["type"].astype(str)
     end = feats.window_end.max()
     f = feats[feats.window_end == end].set_index("territory_id")
     ends = sorted(feats.window_end.unique())
 
     tdata = {}
     for code, t in types_cfg.items():
-        row = fca[fca.type == code].iloc[0]
+        row = pat[pat.type == code].iloc[0]
         tdata[code] = {**t, "size": int((types == code).sum()),
-                       "fca": {"intent": row.intent, "precision": _r(row.precision, 3), "recall": _r(row.recall, 3),
-                               "f1": _r(row.f1, 3), "extent": int(row.extent_size)},
+                       "pattern": {"intervals": row.intervals, "precision": _r(row.precision_test, 3),
+                                   "recall": _r(row.recall_test, 3), "stability": _r(row.stability, 3),
+                                   "extent": int(row.extent_size)},
                        "z": {k: _r(v, 3) for k, v in prof_z[code].items()},
                        "median": {k: _r(v, 4) for k, v in prof_m[code].items()}}
 
@@ -61,6 +62,7 @@ def collect(cfg):
             "sp": _r(rec["spend_month"], 0), "g": _r(rec["growth_2024"], 4),
             "ss": _r(f.loc[tid, "spend_to_salary"], 4) if tid in f.index else None,
             "sal": _r(ctx.salary.get(tid), 0), "pop": _r(ctx.population.get(tid), 0),
+            "pay": _r(ctx.payroll_pc_month.get(tid), 0), "urb": _r(ctx.urban_share.get(tid), 3),
             "sh": {c.replace("share_", ""): _r(f.loc[tid, c], 4) for c in f.columns if c.startswith("share_")},
             "pe": [p["territory_id"] for p in rec["peers"]], "pd": [p["distance"] for p in rec["peers"]],
             "lp": rec["local_peers"],
@@ -73,10 +75,18 @@ def collect(cfg):
 
     net = pd.read_csv(out / "network" / "rules_comparison.csv")
     grid = pd.read_csv(out / "cluster" / "icvi_grid.csv")
-    synth = pd.read_csv(out / "cluster" / "synthetic_k_accuracy.csv", index_col=0).iloc[:, 0]
+    synth = pd.concat([pd.read_csv(out / "cluster" / "synthetic_k_accuracy.csv", index_col=0)["all"].rename("strong"),
+                       pd.read_csv(out / "cluster" / "synthetic_k_accuracy_weak.csv", index_col=0)["all"].rename("weak")],
+                      axis=1)
+    synth_ari = pd.concat([pd.read_csv(out / "cluster" / "synthetic_methods_ari.csv").assign(features="strong"),
+                           pd.read_csv(out / "cluster" / "synthetic_methods_ari_weak.csv").assign(features="weak")])
+    synth_ari = synth_ari.groupby(["method", "features", "edges"]).ari.mean().round(3)
+    null = pd.read_csv(out / "cluster" / "null_structure.csv")
+    thesis = pd.read_csv(out / "dataset" / "thesis_check.csv")
+    seeds_p = out / "cluster" / "methods_seeds_summary.csv"
+    seeds = pd.read_csv(seeds_p, header=[0, 1], index_col=0) if seeds_p.exists() else None
     xi = pd.read_csv(out / "cluster" / "kefrin_xi.csv")
     macro = pd.read_csv(out / "typology" / "icvi_macro.csv")
-    sub = pd.read_csv(out / "typology" / "icvi_sub.csv")
     final = pd.read_csv(out / "typology" / "icvi_final.csv", index_col=0).iloc[:, 0]
     trans = pd.read_csv(out / "dynamics" / "transitions_first_last.csv", index_col=0)
     centers = pd.read_parquet(out / "dynamics" / "centers_by_window.parquet")
@@ -95,9 +105,18 @@ def collect(cfg):
         "stability": stab,
         "rules": net.round(4).to_dict("records"),
         "grid": grid.round(4).to_dict("records"),
-        "synth": {k: _r(v, 3) for k, v in synth.items()},
+        "synth": {k: {"strong": _r(r.strong, 3), "weak": _r(r.weak, 3)} for k, r in synth.iterrows()},
+        "synth_n": {"strong": len(pd.read_csv(out / "cluster" / "synthetic_k_choice.csv")),
+                    "weak": len(pd.read_csv(out / "cluster" / "synthetic_k_choice_weak.csv"))},
+        "synth_ari": [{"method": m, "features": f_, "edges": e, "ari": float(v)} for (m, f_, e), v in synth_ari.items()],
+        "null": null.round(4).to_dict("records"),
+        "thesis": thesis.round(4).to_dict("records"),
+        "seeds": None if seeds is None else {m: {k: [_r(seeds.loc[m, (k, "mean")], 4), _r(seeds.loc[m, (k, "std")], 4)]
+                                                 for k in ["SW", "CH", "S_Dbw", "AVI", "AVU", "ANUI", "MQ"]}
+                                             for m in seeds.index},
+        "k_rule": cfg["typology"]["k_rule"],
         "xi": xi.round(4).to_dict("records"),
-        "macro": macro.round(4).to_dict("records"), "sub": sub.round(4).to_dict("records"),
+        "macro": macro.round(4).to_dict("records"),
         "final": {k: _r(v, 4) for k, v in final.items()},
         "trans": {"index": list(trans.index.astype(str)), "columns": list(trans.columns.astype(str)),
                   "values": trans.to_numpy().tolist()},
@@ -110,9 +129,11 @@ def collect(cfg):
     same = pd.Series({i: sum(reg.get(int(x)) == reg.get(i) for x in r.split(";")) for i, r in peers.peers.items()})
     same = same[~reg.reindex(same.index).isin(["Москва", "Санкт-Петербург"])]
     first = re.search(r"\|--- (.+?) <= ([\d.]+)", (out / "interpret" / "tree_rules.txt").read_text(encoding="utf-8"))
-    tree_acc = float(re.search(r"([\d.]+)", (out / "interpret" / "tree_rules.txt").read_text(encoding="utf-8")).group(1))
+    nums = re.findall(r": ([\d.]+)\n", (out / "interpret" / "tree_rules.txt").read_text(encoding="utf-8"))
+    tree_acc, tree_cv = float(nums[0]), float(nums[1])
     findings = {"same_region_median": float(same.median()), "same_region_n": int(len(same)),
-                "tree_feature": first.group(1), "tree_threshold": float(first.group(2)), "tree_acc": tree_acc}
+                "tree_feature": first.group(1), "tree_threshold": float(first.group(2)), "tree_acc": tree_acc,
+                "tree_cv": tree_cv}
     meta = {"findings": findings, "n_mo": len(mos), "months": f"{ends[0][:4]}-01 — {ends[-1]}", "first_month": "2023-01",
             "last_month": ends[-1], "windows": ends, "n_moved": int(flags.moved.sum()),
             "n_div": int(flags.divergence.sum()), "labels": LABELS, "cfg": {

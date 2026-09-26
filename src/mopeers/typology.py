@@ -1,9 +1,9 @@
-"""Двухуровневая типология МО по окну `window_end` (по умолчанию — последнее, 2024 год).
+"""Типология МО по окну `window_end` (по умолчанию — последнее, 2024 год).
 
-Уровень 1 — макротипы; уровень 2 — подтипы внутри каждого макротипа. На обоих уровнях метод один
-(`typology.method`, по умолчанию KEFRiN с весом сети ξ), число кластеров выбирается голосованием SW, CH и MQ
-(правило из `mopeers.synth`: эти три индекса находят истинное K на синтетике; при равенстве голосов — меньшее K).
-Подтипы получают коды «<макротип>.<подтип>», нумерация — по убыванию размера.
+Метод — `typology.method` (KEFRiN с весом сети ξ). Число типов K выбирается правилом `typology.rule`
+из `mopeers.synth` (по умолчанию — Борда по блокам: признаковый блок SW и CH и сетевой блок MQ с равным весом;
+на синтетике это правило вместе с Бордой по всем индексам точнее остальных). При `levels: 2` каждый тип
+делится ещё раз тем же правилом. Типы нумеруются по возрастанию медианных трат жителя: 1 — самые низкие.
 """
 import numpy as np
 import pandas as pd
@@ -12,8 +12,7 @@ from scipy import sparse
 from .cluster import feature_matrix, icvi, run_method
 from .config import load_config, path
 from .network import knn_graph, road_distances, similarity, window_months
-
-VOTERS = ["SW", "CH", "MQ"]
+from .synth import choose
 
 
 def choose_k(x, a, ks, method, cfg):
@@ -28,8 +27,7 @@ def choose_k(x, a, ks, method, cfg):
         labs[k] = lab
         rows.append({"k": k, **icvi(x, a, lab)})
     t = pd.DataFrame(rows).set_index("k")
-    votes = pd.Series([t[m].idxmax() for m in VOTERS]).value_counts()
-    k = int(votes[votes == votes.max()].index.min())
+    k = choose(t, cfg["typology"]["k_rule"])
     return k, labs[k], t
 
 
@@ -56,15 +54,17 @@ def build(cfg=None, end=None):
     a = knn_graph(similarity(tc["rule"], fw, panel, ids, window_months(panel, end), road_distances(cfg, ids), cfg),
                   cfg["network"]["k"])
     k1, lab1, t1 = choose_k(x, a, tc["k_macro"], tc["method"], cfg)
-    lab1 = _order_by_size(lab1)
-    print("макротипов:", k1, "| размеры", np.bincount(lab1).tolist())
+    spend = fw.log_spend.to_numpy()
+    order = pd.Series(spend).groupby(lab1).median().sort_values().index  # по возрастанию медианных трат
+    lab1 = np.array([list(order).index(v) for v in lab1])
+    print("типов первого уровня:", k1, "| размеры", np.bincount(lab1).tolist())
     codes = np.empty(len(ids), dtype=object)
     level2 = []
     for m in range(k1):
         idx = np.where(lab1 == m)[0]
         sub_a = sparse.csr_matrix(a[idx][:, idx])
-        if len(idx) < tc["min_split_size"]:
-            codes[idx] = f"{m + 1}.1"
+        if tc["levels"] == 1 or len(idx) < tc["min_split_size"]:
+            codes[idx] = f"{m + 1}"
             continue
         k2, lab2, t2 = choose_k(x[idx], sub_a, tc["k_sub"], tc["method"], cfg)
         lab2 = _order_by_size(lab2)

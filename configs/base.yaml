@@ -39,6 +39,7 @@ rosstat:
     emp_manufacturing_share: {code: Y48423005, filters: {okved2: Обрабатывающие}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
     emp_public_share: {code: Y48423005, filters: {okved2: Государственное управление}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
     emp_agri_share: {code: Y48423005, filters: {okved2: "Сельское, лесное"}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
+    payroll_pc_month: {code: Y48423006, filters: {okved2: Всего по обследуемым}, period: Январь-декабрь, per: capita, scale: 83.3333}  # ФОТ организаций без МП, руб. на жителя в месяц (тыс. руб. × 1000 / 12)
 
 # Код жюри: скачивается с зафиксированного коммита, в репозиторий не копируется.
 third_party:
@@ -80,18 +81,26 @@ cluster:
   clip_z: 5              # стандартизованные признаки обрезаются на ±clip_z
   kefrin_xi: 2.0         # вес сети в KEFRiN (вес признаков rho = 1); выбран по outputs/cluster/kefrin_xi.csv
   kefrin_n_init: 3
+  seeds_check: {seeds: 10, n_init: 10}   # сравнение методов при итоговом K: сиды и равный бюджет перезапусков
   xi_grid: [0, 1, 2, 5, 10, 20, 50]   # перебор веса сети
   xi_k: [4, 8]
 
-synthetic:            # проверка выбора K на синтетике генератором Шалилеха (репозиторий KEFRiN)
+synthetic:            # генератор Шалилеха (репозиторий KEFRiN); ξ — как в типологии
   n_nodes: 400
-  n_features: 19      # как в реальной матрице признаков
-  k_true: [5, 7, 9]
-  pr_v: [0.7, 0.9]    # смешение кластеров по признакам: меньше — сильнее перекрытие
-  p_within: 0.08
-  p_between: 0.01
+  n_features: 28      # + noise_features = 30, как в реальной матрице признаков
   noise_features: 2
-  repeats: 2
+  k_true: [2, 3, 4, 5, 7]
+  k_range: [2, 3, 4, 5, 6, 7, 8, 10]
+  pr_v: [0.7, 0.9]    # смешение групп по признакам: меньше — сильнее перекрытие
+  edge_levels:        # вероятности ребра внутри / между группами
+    лёгкая: [0.08, 0.01]
+    трудная: [0.05, 0.02]
+  repeats: 3
+  methods: [kefrin, leiden, spectral, kmeans]
+  null_perms: 10      # перестановок для нулевой модели реальных данных
+  weak_features:      # второй эксперимент: признаки слабые, сеть информативна
+    pr_v: [0.1, 0.2]
+    k_true: [3, 5]
 
 dynamics:             # типология — mopeers.typology по окну 2024 г.; окна — отнесение к ближайшему центру
   drift_quantile: 0.95
@@ -107,11 +116,17 @@ geo:
   simplify: 4%
 
 interpret:
-  fca_attrs: 8          # атрибутов с наибольшим подъёмом для решётки понятий типа
+  pattern_features: 4   # признаков в интервальном описании типа
+  core_share: 0.5       # ядро типа — доля МО, ближайших к центру
+  min_coverage: 0.8     # признаки с меньшим покрытием МО не используются в описании
+  exclude_features: [share_Прочее]   # остаток «итог − 5 категорий» — без самостоятельного смысла
+  n_boot: 20
   tree_depth: 3
   tree_min_leaf: 20
 
-typology:             # двухуровневая типология; xi — по outputs/cluster/kefrin_xi.csv
+typology:             # xi — по outputs/cluster/kefrin_xi.csv; rule — по outputs/cluster/synthetic_k_accuracy*.csv
+  levels: 1
+  k_rule: borda_blocks   # правило выбора K (mopeers.synth.choose)
   method: kefrin
   rule: fused
   xi: 2.0

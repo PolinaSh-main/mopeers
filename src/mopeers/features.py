@@ -3,7 +3,7 @@
 Окно с концом в месяце t покрывает t-11..t. Концы окон — месяцы 2024 года, чтобы у каждого окна был
 рост к тем же месяцам 2023 года. Три группы признаков:
 - структура трат: доли категорий в тратах за окно;
-- динамика трат: уровень, рост г/г последних 3 мес., сезонная амплитуда, волатильность;
+- динамика трат: уровень, рост г/г последних 3 мес. (в январском и февральском окне — 1 и 2 мес.), сезонная амплитуда, волатильность;
 - контекст: годовые показатели Росстата и СберИндекса (одинаковы для всех окон).
 """
 import numpy as np
@@ -34,8 +34,11 @@ def window_features(panel, end, min_months):
     w = w.sort_values(["territory_id", "date"])
     w["dlog"] = np.log(w[TOTAL]).groupby(w.territory_id).diff()
     f["volatility"] = w.groupby("territory_id").dlog.std()
-    last3 = months[i - 2:i + 1]
-    prev3 = months[i - 14:i - 11]
+    # рост к тем же месяцам прошлого года; у окон с концом в январе и феврале 2024 г. прошлогодних месяцев
+    # в данных меньше трёх (ряд начинается с 2023-01), поэтому берутся доступные 1–2 месяца
+    start = max(i - 2, 12)
+    last3 = months[start:i + 1]
+    prev3 = months[start - 12:i - 11]
     a = panel[panel.date.isin(last3)].groupby("territory_id")[TOTAL].mean()
     b = panel[panel.date.isin(prev3)].groupby("territory_id")[TOTAL].mean()
     f["growth_yoy_3m"] = (a / b - 1).reindex(ok)

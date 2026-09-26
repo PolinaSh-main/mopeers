@@ -186,3 +186,40 @@ def xi_sweep(cfg=None, end=None):
     out.mkdir(parents=True, exist_ok=True)
     t.to_csv(out / "kefrin_xi.csv", index=False)
     return t
+
+
+def methods_seeds(cfg=None, end=None):
+    """Методы при итоговом K на правиле типологии: `seeds` запусков с разными сидами, равный бюджет —
+    `n_init` перезапусков у KEFRiN и k-средних. Среднее и стандартное отклонение ICVI по сидам."""
+    from .network import knn_graph, road_distances, similarity, window_months
+    cfg = cfg or load_config()
+    mc = cfg["cluster"]["seeds_check"]
+    proc = path(cfg, "processed")
+    panel = pd.read_parquet(proc / "panel.parquet")
+    feats = pd.read_parquet(proc / "features.parquet")
+    ctx = pd.read_parquet(proc / "context.parquet")
+    mo = pd.read_parquet(proc / "mo.parquet")
+    k = pd.read_parquet(path(cfg, "outputs") / "typology" / "types.parquet").type.nunique()
+    end = end or feats.window_end.max()
+    f = feats[(feats.window_end == end) & feats.territory_id.isin(mo.index)]
+    ids = list(f.territory_id)
+    x = feature_matrix(f, ctx, ids, cfg)[0].to_numpy()
+    fw = f.set_index("territory_id").loc[ids]
+    a = knn_graph(similarity(cfg["typology"]["rule"], fw, panel, ids, window_months(panel, end),
+                             road_distances(cfg, ids), cfg), cfg["network"]["k"])
+    rows = []
+    for method in cfg["cluster"]["methods"]:
+        for seed in range(mc["seeds"]):
+            if method == "kmeans":
+                from sklearn.cluster import KMeans
+                lab = KMeans(k, n_init=mc["n_init"], random_state=seed).fit_predict(x)
+            else:
+                lab = run_method(method, k, x, a, seed=seed, xi=cfg["typology"]["xi"], n_init=mc["n_init"])
+            rows.append({"method": method, "seed": seed, "k": len(set(lab)), **icvi(x, a, lab)})
+        print(method, "готово", flush=True)
+    t = pd.DataFrame(rows)
+    t.to_csv(path(cfg, "outputs") / "cluster" / "methods_seeds.csv", index=False)
+    s = t.groupby("method")[list(HIGHER_BETTER)].agg(["mean", "std"])
+    s.to_csv(path(cfg, "outputs") / "cluster" / "methods_seeds_summary.csv")
+    print(s.round(3).to_string())
+    return t

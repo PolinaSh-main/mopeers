@@ -34,38 +34,64 @@ def binarize(raw):
     return pd.DataFrame(cols)
 
 
-def fca_descriptions(bin_df, labels, n_attrs):
-    """Понятие решётки, лучше всего описывающее тип.
+def interval_patterns(raw, z, labels, ic, seed=0):
+    """Описание типов интервальными узорными структурами (interval pattern structures; Kaytoue, Kuznetsov et al., 2011).
 
-    Для типа берутся `n_attrs` атрибутов с наибольшим подъёмом (доля в типе / доля в стране). На контексте
-    «все МО × эти атрибуты» строится решётка формальных понятий (fcapy); выбирается понятие с непустым
-    содержанием, чей объём лучше всего совпадает с типом по F1.
+    Описание множества МО A — вектор интервалов [min, max] значений признаков по A (замыкание в интервальной
+    узорной структуре); объём описания — все МО страны, чьи значения попадают во все интервалы. Для типа:
+    признаки — `pattern_features` самых отличающихся от страны (по медиане стандартизованных значений), без
+    остаточной категории «прочее» и признаков с покрытием ниже `min_coverage`; A — ядро типа, доля
+    `core_share` его МО, ближайших к центру типа.
+
+    Качество: точность (доля объёма в типе) и полнота (доля типа в объёме) на отложенной половине МО — узор
+    строится по ядру обучающей половины; устойчивость объёма — средний индекс Жаккара объёмов на `n_boot`
+    подвыборках; пересечения объёмов разных типов.
     """
-    from fcapy.lattice import ConceptLattice
-    out = []
-    base = bin_df.mean()
+    rng = np.random.default_rng(seed)
+    cover = raw.notna().mean()
+    usable = [c for c in raw.columns if c not in ic["exclude_features"] and cover[c] >= ic["min_coverage"]]
+
+    def pattern(members, cols):
+        zz = z.loc[members, cols]
+        core = members[np.argsort(np.linalg.norm(zz - zz.mean(), axis=1))[:max(5, int(len(members) * ic["core_share"]))]]
+        box = raw.loc[core, cols]
+        return box.min(), box.max()
+
+    def extent(lo, hi, index):
+        r = raw.loc[index, lo.index]
+        return index[((r >= lo) & (r <= hi)).all(axis=1).to_numpy()]
+
+    ids = raw.index
+    half = rng.permutation(len(ids))
+    train, test = ids[half[: len(ids) // 2]], ids[half[len(ids) // 2:]]
+    rows, extents = [], {}
     for t in sorted(labels.unique()):
-        inside = labels == t
-        lift = (bin_df[inside.to_numpy()].mean() / base.replace(0, np.nan)).dropna().sort_values(ascending=False)
-        attrs = list(lift.index[:n_attrs])
-        sub = bin_df[attrs]
-        ctx = FormalContext(data=sub.to_numpy().tolist(), object_names=[str(i) for i in sub.index],
-                            attribute_names=attrs)
-        lattice = ConceptLattice.from_context(ctx)
-        best = None
-        for c in lattice:
-            if not c.intent:
-                continue
-            ext = pd.Index([int(i) for i in c.extent])
-            tp = inside.reindex(ext).sum()
-            prec, rec = tp / max(len(ext), 1), tp / inside.sum()
-            f1 = 2 * prec * rec / (prec + rec) if tp else 0
-            if best is None or f1 > best["f1"]:
-                best = {"type": t, "size": int(inside.sum()), "intent": list(c.intent), "extent_size": len(ext),
-                        "precision": float(prec), "recall": float(rec), "f1": float(f1)}
-        best["n_concepts"] = len(lattice)
-        out.append(best)
-    return pd.DataFrame(out)
+        members = labels.index[labels == t]
+        diff = z.loc[members, usable].median().abs().sort_values(ascending=False)
+        cols = list(diff.index[: ic["pattern_features"]])
+        lo, hi = pattern(members, cols)
+        ext = extent(lo, hi, ids)
+        extents[t] = set(ext)
+        # отложенная выборка
+        lo_t, hi_t = pattern(members.intersection(train), cols)
+        ext_t = extent(lo_t, hi_t, test)
+        in_t = labels.reindex(ext_t).eq(t)
+        tp = int(in_t.sum())
+        n_type_test = int(labels.reindex(test).eq(t).sum())
+        # устойчивость объёма
+        jac = []
+        for _ in range(ic["n_boot"]):
+            sub = members[rng.random(len(members)) < 0.8]
+            lb, hb = pattern(sub, cols)
+            eb = set(extent(lb, hb, ids))
+            jac.append(len(eb & extents[t]) / max(len(eb | extents[t]), 1))
+        rows.append({"type": t, "size": len(members), "features": cols,
+                     "intervals": {c: [float(lo[c]), float(hi[c])] for c in cols},
+                     "extent_size": len(ext), "precision_test": tp / max(len(ext_t), 1),
+                     "recall_test": tp / max(n_type_test, 1), "stability": float(np.mean(jac))})
+    types = sorted(extents)
+    overlap = pd.DataFrame([[len(extents[a] & extents[b]) for b in types] for a in types], index=types, columns=types)
+    return pd.DataFrame(rows), overlap
 
 
 def lab_categories(mo, ctx):
@@ -98,11 +124,21 @@ def build(cfg=None, labels=None):
     prof_z = z.groupby(labels).mean().T
     prof_raw = raw.groupby(labels).median().T
     prof_raw["Россия"] = raw.median()
-    fca = fca_descriptions(binarize(raw[cols]), labels, ic["fca_attrs"])
-    tree = DecisionTreeClassifier(max_depth=ic["tree_depth"], min_samples_leaf=ic["tree_min_leaf"],
-                                  random_state=0).fit(raw[cols].fillna(raw[cols].median()), labels)
-    rules = export_text(tree, feature_names=[LABELS.get(c, c) for c in cols], decimals=3)
-    tree_acc = float(tree.score(raw[cols].fillna(raw[cols].median()), labels))
+    raw_desc = raw[cols].copy()
+    raw_desc["spend_month"] = raw["spend_month"]
+    raw_desc = raw_desc.drop(columns=["log_spend"])
+    fca, overlap = interval_patterns(raw_desc, z.assign(spend_month=z.log_spend).drop(columns=["log_spend"]),
+                                     labels, ic)
+    # пороговые правила — в исходных единицах (траты в рублях), без остаточной категории
+    from sklearn.model_selection import cross_val_score
+    tree_x = raw_desc.drop(columns=[c for c in ic["exclude_features"] if c in raw_desc.columns])
+    tree_x = tree_x.fillna(tree_x.median())
+    make_tree = lambda: DecisionTreeClassifier(max_depth=ic["tree_depth"], min_samples_leaf=ic["tree_min_leaf"],
+                                               random_state=0)
+    tree = make_tree().fit(tree_x, labels)
+    rules = export_text(tree, feature_names=[LABELS.get(c, c) for c in tree_x.columns], decimals=3)
+    tree_acc = float(tree.score(tree_x, labels))
+    tree_cv = float(cross_val_score(make_tree(), tree_x, labels, cv=5).mean())
     cats = lab_categories(mo.loc[ids], ctx)
     cross = pd.DataFrame({c: cats[c].groupby(labels).mean() for c in cats}).T
 
@@ -110,16 +146,20 @@ def build(cfg=None, labels=None):
     out.mkdir(parents=True, exist_ok=True)
     prof_z.to_csv(out / "profile_z.csv")
     prof_raw.to_csv(out / "profile_median.csv")
-    fca.to_json(out / "fca_descriptions.json", orient="records", force_ascii=False, indent=1)
-    (out / "tree_rules.txt").write_text(f"точность дерева на обучении: {tree_acc:.3f}\n\n{rules}", encoding="utf-8")
+    fca.to_json(out / "interval_patterns.json", orient="records", force_ascii=False, indent=1)
+    overlap.to_csv(out / "interval_patterns_overlap.csv")
+    (out / "tree_rules.txt").write_text(f"точность дерева на обучении: {tree_acc:.3f}\n"
+                                        f"точность при 5-кратной перекрёстной проверке: {tree_cv:.3f}\n\n{rules}",
+                                        encoding="utf-8")
     cross.to_csv(out / "lab_categories_by_type.csv")
     sizes = labels.value_counts().sort_index()
     for t in sizes.index:
         top = prof_z[t].sort_values()
         print(f"тип {t} ({sizes[t]} МО): выше страны — {', '.join(LABELS.get(c, c) for c in top.index[-4:][::-1])}; "
               f"ниже — {', '.join(LABELS.get(c, c) for c in top.index[:3])}")
-    print(fca[["type", "size", "extent_size", "precision", "recall"]].round(2).to_string())
-    print("дерево глубины", ic["tree_depth"], "— точность", round(tree_acc, 3))
+    print(fca[["type", "size", "features", "extent_size", "precision_test", "recall_test", "stability"]].round(2).to_string())
+    print("пересечения объёмов:"); print(overlap.to_string())
+    print("дерево глубины", ic["tree_depth"], "— точность", round(tree_acc, 3), "| 5-кратная проверка", round(tree_cv, 3))
     print(cross.round(2).to_string())
     return prof_z, fca, cross
 
@@ -151,8 +191,23 @@ def external_mobility(cfg=None):
     n, k = len(m), len(groups)
     eta2 = (h - k + 1) / (n - k)
     res = m.groupby("type").value.agg(["count", "median"]).rename(columns={"median": "mobility_km"})
+    # устойчивость вывода: без районов Санкт-Петербурга и против базовой модели «только доля горожан»
+    from scipy.stats import spearmanr
+    ctx = pd.read_parquet(path(cfg, "processed") / "context.parquet")
+    inner = mo.mo_type.str.startswith("внутригородская")
+    rest = m[~m.territory_id.astype(int).map(inner).fillna(False).astype(bool)]  # без районов Санкт-Петербурга
+    g2 = [g.value.to_numpy() for _, g in rest.groupby("type") if len(g) >= 5]
+    h2, p2 = kruskal(*g2)
+    eta2_rest = (h2 - len(g2) + 1) / (len(rest) - len(g2))
+    rank = m.value.rank()
+    type_means = rank.groupby(m.type).transform("mean")
+    urb = ctx.urban_share.reindex(m.territory_id.astype(int)).to_numpy()
+    ok = ~np.isnan(urb)
+    rho, _ = spearmanr(urb[ok], m.value.to_numpy()[ok])
+    extra = {"eta2_without_spb": eta2_rest, "p_without_spb": p2, "n_without_spb": len(rest),
+             "urban_share_spearman_r2": rho ** 2, "n_urban_known": int(ok.sum())}
     out = path(cfg, "outputs") / "interpret"
     res.to_csv(out / "mobility_by_type.csv")
-    pd.Series({"n": n, "H": h, "p_value": p, "eta2": eta2}).to_csv(out / "mobility_test.csv")
-    print(res.round(2).to_string()); print(f"n = {n}, H = {h:.1f}, p = {p:.2e}, η² = {eta2:.2f}")
+    pd.Series({"n": n, "H": h, "p_value": p, "eta2": eta2, **extra}).to_csv(out / "mobility_test.csv")
+    print(res.round(2).to_string()); print(f"n = {n}, H = {h:.1f}, p = {p:.2e}, η² = {eta2:.2f}", extra)
     return res

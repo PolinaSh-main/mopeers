@@ -133,3 +133,44 @@ def peers(name_or_id, cfg=None):
     names = flat.set_index("territory_id").name
     return pd.DataFrame([{"territory_id": p["territory_id"], "name": names.get(p["territory_id"]),
                           "distance": p["distance"], "road_km": p["road_km"]} for p in rec["peers"]])
+
+
+def thesis_check(cfg=None):
+    """Проверка тезиса «сопоставимые МО дают другой вывод, чем свой регион».
+
+    Для каждого МО и показателя — вывод «выше / ниже медианы» дважды: среди МО своего региона и среди 16
+    (МО и 15 сопоставимых). Доля МО, у которых вывод меняется, по каждому показателю. Москва и Санкт-Петербург
+    исключены: их районы — отдельный регион-город.
+    """
+    cfg = cfg or load_config()
+    proc = path(cfg, "processed")
+    mo = pd.read_parquet(proc / "mo.parquet")
+    flat = pd.read_parquet(path(cfg, "outputs") / "dataset" / "mo_peers.parquet").set_index("territory_id")
+    feats = pd.read_parquet(proc / "features.parquet")
+    ctx = pd.read_parquet(proc / "context.parquet")
+    f = feats[feats.window_end == feats.window_end.max()].set_index("territory_id")
+    panel = pd.read_parquet(proc / "panel.parquet")
+    y = panel.assign(year=panel.date.str[:4]).groupby(["territory_id", "year"])["Все категории"].mean().unstack()
+    vals = pd.DataFrame({"траты жителя": np.exp(f.log_spend), "рост трат 2024/2023": y["2024"] / y["2023"] - 1,
+                         "траты к зарплате": f.spend_to_salary, "доля маркетплейсов": f["share_Маркетплейсы"]})
+    ids = [i for i in flat.index if mo.loc[i, "region_name"] not in ("Москва", "Санкт-Петербург")]
+    reg = mo.region_name
+    rows = []
+    for m in vals.columns:
+        v = vals[m]
+        reg_med = v.groupby(reg.reindex(v.index)).median()
+        changed, n = 0, 0
+        for i in ids:
+            if pd.isna(v.get(i)):
+                continue
+            peers = [int(x) for x in flat.loc[i, "peers"].split(";")]
+            pv = v.reindex([i] + peers).dropna()
+            above_reg = v[i] > reg_med[reg[i]]
+            above_peer = v[i] > pv.median()
+            n += 1
+            changed += above_reg != above_peer
+        rows.append({"metric": m, "n": n, "share_changed": changed / n})
+    t = pd.DataFrame(rows)
+    t.to_csv(path(cfg, "outputs") / "dataset" / "thesis_check.csv", index=False)
+    print(t.round(3).to_string())
+    return t
