@@ -43,10 +43,19 @@ def fetch(name, region):
     return []
 
 
+def stem(name):
+    """Основа названия для поиска в заголовке: без последних двух букв у длинных слов (Братск → Брат, Братского)."""
+    w = name.split()[0].replace("ё", "е")
+    return (w[:-2] if len(w) > 6 else w).lower()
+
+
 rows = []
 for i, mo in enumerate(MO_LIST):
+    st = stem(mo["name"])
     for n in fetch(mo["name"], mo["region"]):
-        rows.append({**n, "territory_id": mo["id"], "group": mo["group"]})
+        # только заголовки, где названо само МО: запрос с регионом приносит и новости региона в целом
+        if st in n["title"].lower().replace("ё", "е"):
+            rows.append({**n, "territory_id": mo["id"], "group": mo["group"]})
     time.sleep(1.0)
     if i % 50 == 0:
         print("новости", i, len(rows), flush=True)
