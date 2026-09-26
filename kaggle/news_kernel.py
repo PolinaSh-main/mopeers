@@ -67,9 +67,10 @@ print("заголовков", len(news), flush=True)
 path = hf_hub_download("ai-sage/GigaChat3.1-10B-A1.8B-GGUF", "GigaChat3.1-10B-A1.8B-q8_0.gguf")
 llm = Llama(model_path=path, n_gpu_layers=-1, n_ctx=4096, verbose=False)
 cat_list = "\n".join(f"- {c}" for c in CATEGORIES)
-schema = {"type": "array", "items": {"type": "object", "properties": {
+# корень схемы — объект: режим json_object у llama.cpp возвращает объект, массив в корне молча терялся
+schema = {"type": "object", "properties": {"labels": {"type": "array", "items": {"type": "object", "properties": {
     "i": {"type": "integer"}, "category": {"type": "string", "enum": CATEGORIES}, "economy": {"type": "boolean"}},
-    "required": ["i", "category", "economy"]}}
+    "required": ["i", "category", "economy"]}}}, "required": ["labels"]}
 labels = []
 for mo_id, g in news.groupby("territory_id"):
     mo = next(m for m in MO_LIST if m["id"] == mo_id)
@@ -82,9 +83,10 @@ for mo_id, g in news.groupby("territory_id"):
                   f"Категории:\n{cat_list}\n\nЗаголовки:\n" + "\n".join(f"{j}. {t}" for j, t in enumerate(chunk)))
         try:
             r = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0,
-                                           max_tokens=60 * len(chunk),
+                                           max_tokens=100 * len(chunk) + 50,
                                            response_format={"type": "json_object", "schema": schema})
             ans = json.loads(r["choices"][0]["message"]["content"])
+            ans = ans.get("labels", []) if isinstance(ans, dict) else ans
         except Exception as e:
             print("ошибка разметки", mo_id, e, flush=True)
             ans = []
@@ -92,7 +94,7 @@ for mo_id, g in news.groupby("territory_id"):
             if isinstance(a, dict) and 0 <= a.get("i", -1) < len(chunk):
                 labels.append({"territory_id": mo_id, "title": chunk[a["i"]], "category": a.get("category"),
                                "economy": bool(a.get("economy"))})
-    print("размечено МО", mo_id, len(labels), flush=True)
+    print("размечено МО", mo_id, len(labels), "из", len(news[news.territory_id <= mo_id]), flush=True)
 out = news.merge(pd.DataFrame(labels), on=["territory_id", "title"], how="left")
 out["date"] = out.date.astype(str)
 out.to_parquet("/kaggle/working/news.parquet")

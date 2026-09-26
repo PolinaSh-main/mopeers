@@ -66,7 +66,7 @@ def pull(cfg=None):
     out = path(cfg, "outputs") / "news"
     out.mkdir(parents=True, exist_ok=True)
     r = _kaggle("kernels", "output", f"{cfg['news']['kaggle_user']}/{cfg['news']['kernel_slug']}", "-p", str(out))
-    print(r.stdout.strip()[-500:], r.stderr.strip()[-300:])
+    print((r.stdout or "").strip()[-500:], (r.stderr or "").strip()[-300:])
 
 
 def build(cfg=None):
