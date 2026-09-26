@@ -9,7 +9,6 @@ wheels/
 # Virtual environments
 .venv
 data/raw/
-data/processed/rosstat_catalog.csv
 competitors/
 third_party/
 outputs/cache/
@@ -19,7 +18,8 @@ page.txt
 Онлайн-конкурс Сбериндекса.html
 Команда СберИндекса телеграм канал/
 outputs/*.log
-data/processed/
+data/processed/*
+!data/processed/rosstat_catalog.csv
 site/vendor/
 # рабочие документы — только локально
 CLAUDE.md
@@ -28,3 +28,4 @@ JOURNAL.md
 STATE.md
 data/telegram.txt
 docs/
+kaggle/build/

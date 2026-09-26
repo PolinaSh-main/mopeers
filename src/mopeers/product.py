@@ -65,7 +65,7 @@ def build(cfg=None):
     records = []
     for i, tid in enumerate(ids):
         near = np.argsort(d[i])[:n]
-        local = [j for j in np.argsort(d[i]) if road[i, j] <= pc["radius_km"]][:pc["n_local"]]
+        local = [j for j in np.argsort(d[i]) if j != i and road[i, j] <= pc["radius_km"]][:pc["n_local"]]
         grp = [i] + list(near)
         sub = raw.iloc[grp]
         potential = {}

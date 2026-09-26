@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сопоставимые муниципалитеты</title>
+<meta name="description" content="Для каждого из 2 068 муниципалитетов России — 15 экономически сопоставимых по данным СберИндекса и Росстата: потенциал, опыт, расхождение с типом.">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#fcfcfb; --surface:#ffffff; --surface-2:#f4f3f0; --line:#e3e1dc; --line-strong:#cfccc5;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#7a7873;
+  --accent:#1a7f4b; --accent-ink:#ffffff;
+  --map-off:#e7e5e0; --map-stroke:#fcfcfb; --focus:#0b0b0b;
+  --good:#1a7f4b; --warn:#b25e00;
+  --t11:#2a78d6; --t12:#1baf7a; --t21:#eb6834; --t22:#4a3aa7; --t23:#c98500;
+  --seq-0:#cde2fb; --seq-1:#86b6ef; --seq-2:#3987e5; --seq-3:#1c5cab; --seq-4:#0d366b;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#141413; --surface:#1a1a19; --surface-2:#232321; --line:#33332f; --line-strong:#46463f;
+    --ink:#f5f4ef; --ink-2:#c3c2b7; --ink-3:#9a998f;
+    --accent:#3fb37a; --accent-ink:#0b0b0b;
+    --map-off:#2c2c29; --map-stroke:#1a1a19; --focus:#ffffff;
+    --t11:#3987e5; --t12:#199e70; --t21:#d95926; --t22:#9085e9; --t23:#c98500;
+    --seq-0:#184f95; --seq-1:#256abf; --seq-2:#3987e5; --seq-3:#6da7ec; --seq-4:#b7d3f6;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#141413; --surface:#1a1a19; --surface-2:#232321; --line:#33332f; --line-strong:#46463f;
+  --ink:#f5f4ef; --ink-2:#c3c2b7; --ink-3:#9a998f;
+  --accent:#3fb37a; --accent-ink:#0b0b0b;
+  --map-off:#2c2c29; --map-stroke:#1a1a19; --focus:#ffffff;
+  --t11:#3987e5; --t12:#199e70; --t21:#d95926; --t22:#9085e9; --t23:#c98500;
+  --seq-0:#184f95; --seq-1:#256abf; --seq-2:#3987e5; --seq-3:#6da7ec; --seq-4:#b7d3f6;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration-color:var(--line-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+h1,h2,h3{line-height:1.15;margin:0 0 .5em;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,52px);font-weight:750}
+h2{font-size:clamp(24px,3.4vw,34px);font-weight:700}
+h3{font-size:18px;font-weight:650}
+p{margin:0 0 1em;max-width:70ch;text-wrap:pretty}
+.muted{color:var(--ink-2)} .small{font-size:14px} .tiny{font-size:12.5px;color:var(--ink-3)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:18px;height:56px}
+.brand{font-weight:700;white-space:nowrap}
+nav.links{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;font-size:14px}
+nav.links a{text-decoration:none;color:var(--ink-2);white-space:nowrap}
+nav.links a:hover{color:var(--ink)}
+.theme-btn{margin-left:auto;background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
+.hero{padding:56px 0 40px;border-top:0}
+.lead{font-size:clamp(17px,2vw,20px);color:var(--ink-2);max-width:62ch}
+.search{position:relative;max-width:560px;margin:24px 0 8px}
+.search input{width:100%;font:inherit;font-size:18px;padding:14px 16px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.search input:focus{outline:2px solid var(--focus);outline-offset:1px}
+.suggest{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;overflow:hidden;z-index:30;display:none;box-shadow:0 8px 24px rgb(0 0 0 / .12)}
+.suggest button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.suggest button:hover,.suggest button.on{background:var(--surface-2)}
+.suggest .reg{color:var(--ink-3);font-size:13px}
+.examples{font-size:14px;color:var(--ink-2)} .examples button{font:inherit;background:none;border:0;padding:0 2px;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:32px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.tile b{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile span{font-size:13.5px;color:var(--ink-2)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.mapbox{position:relative;width:100%}
+.mapbox svg{display:block;width:100%;height:auto}
+.mapbox path.mo{stroke:var(--map-stroke);stroke-width:.35;vector-effect:non-scaling-stroke}
+.tip{position:fixed;pointer-events:none;z-index:40;background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 6px 18px rgb(0 0 0 / .15);max-width:260px;display:none}
+.tip b{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;color:var(--ink-2);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.pot-row{display:grid;grid-template-columns:150px minmax(0,1fr) 58px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.pot-row:last-child{border-bottom:0}
+.pot-row .rank{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.pot-row svg{width:100%;height:22px;display:block}
+.exp{display:grid;gap:10px}
+.exp .card{padding:12px 14px}
+.exp .g{font-variant-numeric:tabular-nums;font-weight:650}
+.status{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface-2);font-size:14px}
+.status .ic{font-weight:700;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px}
+.strip{display:flex;gap:2px;margin-top:8px}
+.strip i{flex:1;height:14px;border-radius:3px}
+.strip-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:4px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--ink-2);font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.click{cursor:pointer} tr.click:hover{background:var(--surface-2)}
+.tablewrap{overflow-x:auto}
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.type-card canvas{width:100%;height:auto;display:block;border-radius:8px;background:var(--surface-2)}
+.type-card h3{display:flex;gap:8px;align-items:center;margin-top:12px}
+.fca{font-size:13.5px;background:var(--surface-2);border-radius:8px;padding:10px 12px;margin-top:10px}
+.fca ul{margin:6px 0 6px 18px;padding:0}
+.bars{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 10px;font-size:13px;margin-top:10px;align-items:center}
+.bars svg{width:100%;height:16px;display:block}
+.mode-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.mode-btns button,.btn{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode-btns button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.matrix td{text-align:center;font-variant-numeric:tabular-nums;border:1px solid var(--bg);min-width:52px}
+.game{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;font:inherit;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt.right{border-color:var(--good);box-shadow:inset 0 0 0 1px var(--good)}
+.opt.wrong{border-color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn)}
+.share-bars{display:grid;grid-template-columns:130px minmax(0,1fr) 44px;gap:4px 8px;font-size:13px;align-items:center}
+.share-bars div.b{height:12px;border-radius:3px;background:var(--ink-3)}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;counter-reset:s}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;font-size:14px}
+.step b{display:block;margin-bottom:4px}
+.step b::before{counter-increment:s;content:counter(s) ". ";color:var(--ink-3)}
+.chart svg{width:100%;max-width:760px;height:auto;display:block}
+.chart text{fill:var(--ink-2);font-size:11px}
+.chart .grid line{stroke:var(--line)}
+code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
+pre{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto}
+footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2)}
+.embed-only header.top,.embed-only .hide-embed{display:none}
+@media (max-width:600px){ .brand{display:none} }
+@media (max-width:860px){
+  .grid2,.game{grid-template-columns:1fr}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:1fr 1fr}
+  .pot-row{grid-template-columns:110px minmax(0,1fr) 52px}
+  .bars{grid-template-columns:120px minmax(0,1fr)}
+  .types{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">Сопоставимые муниципалитеты</div>
+  <nav class="links">
+    <a href="#card">Карточка МО</a><a href="#types">Типы</a><a href="#change">Динамика</a>
+    <a href="#hidden">Невидимая экономика</a><a href="#game">Игра</a><a href="#method">Метод</a><a href="#data">Данные</a>
+  </nav>
+  <button class="theme-btn" id="themeBtn" type="button">Тема</button>
+</div></header>
+
+<main>
+<section class="hero hide-embed"><div class="wrap">
+  <h1>С кем на самом деле сравнивать ваш муниципалитет</h1>
+  <p class="lead">Среднее по региону или по стране мало говорит о конкретной территории. Для каждого из <b id="nMo"></b> муниципалитетов мы нашли 15 экономически сопоставимых: по тому, на что тратят деньги жители (СберИндекс), по доходам, занятости, демографии и доступности рынков (Росстат, СберИндекс). Карточка любого муниципалитета отвечает на три вопроса: где его потенциал, у кого учиться и не уходит ли он от своего типа.</p>
+  <div class="search">
+    <input id="q" type="search" placeholder="Название муниципалитета, например Братск" autocomplete="off" aria-label="Поиск муниципалитета">
+    <div class="suggest" id="suggest" role="listbox"></div>
+  </div>
+  <div class="examples">Примеры: <span id="exBtns"></span></div>
+  <div class="tiles" id="tiles"></div>
+</div></section>
+
+<section id="card"><div class="wrap">
+  <div class="grid2">
+    <div>
+      <div class="tiny" id="cRegion"></div>
+      <h2 id="cName" style="margin-bottom:8px"></h2>
+      <div id="cChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+      <div class="mapbox" id="mainMap"></div>
+      <div class="legend" id="mainLegend"></div>
+      <div class="mode-btns hide-embed" id="mapModes" style="margin-top:12px"></div>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="card">
+        <h3>Потенциал: место среди 15 сопоставимых</h3>
+        <p class="small muted" style="margin-bottom:8px">Точки — сопоставимые муниципалитеты, крупная точка — выбранный. Место 1 — наибольшее значение.</p>
+        <div id="pot"></div>
+      </div>
+      <div class="card">
+        <h3>Опыт: кто из сопоставимых вырос сильнее</h3>
+        <p class="small muted" style="margin-bottom:10px">Рост средних трат жителя, 2024 к 2023 году, и признаки, которыми лидер сильнее всего отличается.</p>
+        <div class="exp" id="exp"></div>
+      </div>
+      <div class="card">
+        <h3>Расхождение с типом</h3>
+        <div id="div"></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:24px">
+    <div class="card">
+      <h3>15 сопоставимых муниципалитетов</h3>
+      <p class="small muted">Сходство — по 30 признакам; ближе к 0 — сходнее. Строка кликабельна.</p>
+      <div class="tablewrap"><table id="peerTable"></table></div>
+    </div>
+    <div class="card hide-embed">
+      <h3>Сопоставимые рядом</h3>
+      <p class="small muted" id="localNote"></p>
+      <div id="localList"></div>
+      <h3 style="margin-top:18px">Встроить карточку</h3>
+      <p class="small muted">Карточка открывается по ссылке и встраивается в сайт администрации или СМИ.</p>
+      <pre id="embedCode"></pre>
+      <p class="small muted">Те же данные машиночитаемо: <code id="apiPath"></code></p>
+    </div>
+  </div>
+</div></section>
+
+<section id="types" class="hide-embed"><div class="wrap">
+  <h2>Пять типов локальной экономики</h2>
+  <p class="muted">Типы найдены алгоритмом KEFRiN, который группирует муниципалитеты одновременно по их признакам и по сети связей между ними. Число типов выбрано индексами качества, которые на синтетических данных находят верное число групп (раздел «Метод»). Каждый тип описан формальным понятием: набором признаков, который выделяет тип среди всех муниципалитетов страны, с точностью этого описания.</p>
+  <div class="types" id="typeCards"></div>
+</div></section>
+
+<section id="change" class="hide-embed"><div class="wrap">
+  <h2>Как меняются типы за 2024 год</h2>
+  <p class="muted" id="changeLead"></p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Откуда и куда перешли муниципалитеты</h3>
+      <p class="small muted">Строка — тип в окне, закончившемся в январе 2024 года, столбец — в декабре 2024 года. На диагонали — оставшиеся в своём типе.</p>
+      <div class="tablewrap" id="matrix"></div>
+    </div>
+    <div class="card">
+      <h3>Доля маркетплейсов в тратах по типам</h3>
+      <p class="small muted">Медиана по муниципалитетам типа, скользящее окно 12 месяцев.</p>
+      <div id="trackCharts" class="chart"></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="hidden" class="hide-embed"><div class="wrap">
+  <h2>Невидимая экономика</h2>
+  <div class="grid2">
+    <div>
+      <p class="muted">Росстат публикует зарплату только работников организаций без малого бизнеса. СберИндекс видит, сколько на самом деле тратят жители. Если жители тратят большую долю официальной зарплаты, значит, у них есть доходы, которых нет в этой статистике: малый бизнес и самозанятость, пенсии и выплаты, работа в другом муниципалитете, неформальный заработок.</p>
+      <div class="mapbox" id="hiddenMap"></div>
+      <div class="legend" id="hiddenLegend"></div>
+    </div>
+    <div class="card">
+      <h3>Траты жителя к официальной зарплате</h3>
+      <p class="small muted">Средние безналичные траты жителя в месяц (СберИндекс, 2024) к среднемесячной зарплате без малого предпринимательства (Росстат, 2024). Доля карт Сбера на рынке отличается по регионам, поэтому сравнивать надёжнее внутри региона и внутри типа.</p>
+      <div id="hiddenByType"></div>
+      <h3 style="margin-top:16px">Наибольшая доля</h3><div id="hiddenTop"></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="game" class="hide-embed"><div class="wrap">
+  <h2>Угадай двойника</h2>
+  <p class="muted">Слева — структура трат жителей муниципалитета. Какой из трёх кандидатов для него экономически ближайший? После ответа модель покажет своё решение.</p>
+  <div class="game">
+    <div class="card"><div class="tiny">Загаданный муниципалитет</div><h3 id="gName"></h3><div id="gBars" class="share-bars"></div></div>
+    <div><div class="opts" id="gOpts"></div><p id="gMsg" class="small" style="margin-top:12px"></p>
+      <div style="display:flex;gap:10px;align-items:center"><button class="btn primary" id="gNext" type="button">Следующий</button><span class="small muted" id="gScore"></span></div></div>
+  </div>
+</div></section>
+
+<section id="method" class="hide-embed"><div class="wrap">
+  <h2>Метод</h2>
+  <div class="steps">
+    <div class="step"><b>Данные</b>Траты жителей по 5 категориям, 2 190 МО × 24 месяца (СберИндекс). 18 показателей Росстата и индекс доступности рынков (СберИндекс).</div>
+    <div class="step"><b>Признаки</b>Скользящее окно 12 месяцев: структура трат, уровень, рост, сезонность, волатильность, контекст. Всего 30 признаков.</div>
+    <div class="step"><b>Сеть</b>Узел — муниципалитет. Ребро — k = <span class="kval"></span> ближайших соседей по выбранному правилу сходства.</div>
+    <div class="step"><b>Типы</b>KEFRiN (Шалилех, Миркин, 2022) по признакам и сети. Число типов — голосованием SW, CH и MQ.</div>
+    <div class="step"><b>Продукт</b>15 ближайших по признакам, ранги по показателям, лидеры роста, флаг расхождения.</div>
+  </div>
+
+  <h3 style="margin-top:32px">1. Какое правило ребра выбрать</h3>
+  <p class="muted small">Шесть правил сходства сравнивались на окне 2024 года. «Однородность соседей» — насколько соседи по сети ближе друг к другу по признакам, чем случайная пара МО (0 — как случайные, 1 — одинаковые). Выбрано слияние структуры трат и дорожной близости: у него самые однородные соседи, а связи остаются в пределах досягаемости.</p>
+  <div class="tablewrap"><table id="rulesTable"></table></div>
+
+  <h3 style="margin-top:32px">2. Каким индексам доверять при выборе числа типов</h3>
+  <p class="muted small">На синтетических атрибутированных сетях с известным числом групп (генератор Шалилеха, 400 узлов, 12 наборов) проверено, как часто каждый индекс указывает верное число. S_Dbw, AVI, AVU и ANUI меняются монотонно с числом групп и выбирают край перебора, поэтому число типов выбирают SW, CH и MQ, а остальные индексы сравнивают методы при фиксированном числе групп. Идея эксперимента — из доклада С. Шалилеха и Е. Антонова на AI Journey 2025.</p>
+  <div id="synthChart" class="chart"></div>
+
+  <h3 style="margin-top:32px">3. Сколько веса дать сети</h3>
+  <p class="muted small">KEFRiN складывает расстояние по признакам и расстояние по сети с весом ξ. При ξ = 0 это обычные k-средних. При ξ = 2 модульность (MQ) и изолированность (AVI) растут, а качество по признакам (SW) не падает, поэтому выбран ξ = 2.</p>
+  <div id="xiChart" class="chart"></div>
+
+  <h3 style="margin-top:32px">4. Методы при одинаковом числе групп</h3>
+  <p class="muted small">Шесть методов на правиле «слияние», 6 групп. Leiden и спектральная кластеризация видят только сеть: у них лучшие сетевые индексы (AVI, MQ) и худшее разделение по признакам (SW, CH). k-средних, GMM и Уорд видят только признаки, и сетевые индексы у них ниже. KEFRiN немного уступает k-средних по признакам и заметно выигрывает по сети: тип однороден по экономике и связан по сети, поэтому выбран он.</p>
+  <div class="tablewrap"><table id="methodsTable"></table></div>
+
+  <h3 style="margin-top:32px">5. Итоговое разбиение</h3>
+  <div class="tablewrap"><table id="finalTable"></table></div>
+  <p class="small muted" style="margin-top:12px">Полное описание — в методологическом отчёте, код и конфигурации — в репозитории.</p>
+</div></section>
+
+<section id="data" class="hide-embed"><div class="wrap">
+  <h2>Данные и API</h2>
+  <p class="muted">Результаты опубликованы как открытый датасет в формате Портала открытых данных СберИндекса: ключ — <code>territory_id</code> из справочника муниципалитетов СберИндекса. Таблица пересчитывается одной командой, когда выходит новый месяц данных.</p>
+  <ul>
+    <li><code>outputs/dataset/mo_peers.csv</code> — тип, флаг расхождения, 15 сопоставимых, 5 сопоставимых в радиусе <span class="rkm"></span> км, лидеры роста, ранги.</li>
+    <li><code>outputs/dataset/api/&lt;territory_id&gt;.json</code> — полная карточка муниципалитета.</li>
+    <li><code>outputs/typology/types.parquet</code> — типы; <code>outputs/dynamics/labels_by_window.parquet</code> — типы по 12 окнам.</li>
+  </ul>
+  <p class="small muted">Данные СберИндекса распространяются по лицензии CC BY-SA 4.0; производный датасет — по той же лицензии, с указанием источника «СберИндекс». Код — открытая лицензия, указана в репозитории.</p>
+</div></section>
+</main>
+
+<footer class="hide-embed"><div class="wrap">
+  Источники: СберИндекс — потребительские безналичные расходы на уровне муниципальных образований, индекс доступности рынков, справочник и границы МО, индекс мобильности (CC BY-SA 4.0); Росстат — База данных показателей муниципальных образований (через каталог «Точно»). Методы: KEFRiN — Shalileh S., Mirkin B. Community partitioning over feature-rich networks using an extended k-means method // Entropy, 2022; индексы AVI, AVU, ANUI и модульность — по библиотеке Pattern (С. Шалилех); анализ формальных понятий — fcapy.
+</div></footer>
+<div class="tip" id="tip"></div>
+
+<script>/*__D3__*/</script>
+<script>/*__TOPOJSON__*/</script>
+<script>
+const DATA = "__DATA__";
+const GEO = "__GEO__";
+const M = DATA.meta, T = DATA.types, MO = DATA.mo, METH = DATA.method;
+const byId = new Map(MO.map(d => [d.id, d]));
+const TYPES = Object.keys(T).sort();
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tColor = t => t ? css('--t' + t.replace('.', '')) : css('--map-off');
+const fmt = new Intl.NumberFormat('ru-RU');
+const pct = v => v == null ? '—' : (v * 100).toLocaleString('ru-RU', {maximumFractionDigits: 1}) + '%';
+const rub = v => v == null ? '—' : fmt.format(Math.round(v)) + ' ₽';
+const sgn = v => v == null ? '—' : (v > 0 ? '+' : '') + (v * 100).toLocaleString('ru-RU', {maximumFractionDigits: 1}) + '%';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const params = new URLSearchParams(location.search);
+if (params.get('embed') === '1') document.body.classList.add('embed-only');
+
+// тема
+(function(){
+  const btn = document.getElementById('themeBtn');
+  let saved = null; try { saved = localStorage.getItem('theme'); } catch(e) {}
+  if (saved) document.documentElement.dataset.theme = saved;
+  btn.onclick = () => {
+    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    const cur = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('theme', next); } catch(e) {}
+    redrawAll();
+  };
+})();
+
+// география
+const fc = topojson.feature(GEO, GEO.objects[Object.keys(GEO.objects)[0]]);
+const featById = new Map(fc.features.map(f => [+f.properties.territory_id, f]));
+function makeProjection(w, h) {
+  return d3.geoConicEqualArea().rotate([-100, 0]).parallels([52, 64]).fitSize([w, h], fc);
+}
+const tip = document.getElementById('tip');
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = 'block';
+  const x = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(ev.clientY + 14, innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip() { tip.style.display = 'none'; }
+function moTip(id) { const d = byId.get(id); if (!d) { const f = featById.get(id); return '<b>Нет данных СберИндекса</b>'; }
+  return `<b>${esc(d.n)}</b><span class="muted">${esc(d.r)}</span><br>${esc(T[d.t]?.name || '')}<br>Траты жителя: ${rub(d.sp)} в месяц`; }
+
+function drawMap(el, fillFn, opts = {}) {
+  const w = 960, h = 560;
+  el.innerHTML = '';
+  const proj = makeProjection(w, h), path = d3.geoPath(proj);
+  const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${w} ${h}`).attr('role', 'img').attr('aria-label', opts.label || 'Карта муниципалитетов');
+  const g = svg.append('g');
+  g.selectAll('path').data(fc.features).join('path').attr('class', 'mo').attr('d', path)
+    .attr('fill', f => fillFn(+f.properties.territory_id))
+    .on('mousemove', (ev, f) => showTip(ev, moTip(+f.properties.territory_id)))
+    .on('mouseleave', hideTip)
+    .on('click', (ev, f) => { const id = +f.properties.territory_id; if (byId.has(id) && opts.onClick) opts.onClick(id); });
+  if (opts.dots) {  // маленькие МО не видны полигоном — центр кружком
+    svg.append('g').selectAll('circle').data(opts.dots).join('circle')
+      .attr('cx', d => proj([d.lon, d.lat])[0]).attr('cy', d => proj([d.lon, d.lat])[1])
+      .attr('r', d => d.r).attr('fill', d => d.fill).attr('stroke', css('--surface')).attr('stroke-width', 1.5)
+      .on('mousemove', (ev, d) => showTip(ev, moTip(d.id))).on('mouseleave', hideTip)
+      .on('click', (ev, d) => opts.onClick && opts.onClick(d.id));
+  }
+  return svg;
+}
+
+// ---------- первый экран ----------
+document.getElementById('nMo').textContent = fmt.format(M.n_mo);
+document.querySelectorAll('.kval').forEach(e => e.textContent = M.cfg.k);
+document.querySelectorAll('.rkm').forEach(e => e.textContent = M.cfg.radius_km);
+document.getElementById('tiles').innerHTML = [
+  [fmt.format(M.n_mo), 'муниципалитетов с данными о тратах жителей'],
+  [TYPES.length, 'типа локальной экономики'],
+  ['24', 'месяца данных, январь 2023 — декабрь 2024'],
+  [fmt.format(M.n_moved), 'муниципалитетов сменили тип за 2024 год']
+].map(([b, s]) => `<div class="tile"><b>${b}</b><span>${s}</span></div>`).join('');
+const EXAMPLES = ['Комсомольск-на-Амуре', 'Братск', 'Суздальский', 'Сургут', 'Пресненский'];
+document.getElementById('exBtns').innerHTML = EXAMPLES.filter(n => MO.find(d => d.n === n))
+  .map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join(', ');
+document.getElementById('exBtns').onclick = e => { const n = e.target.dataset.n; if (n) select(MO.find(d => d.n === n).id, true); };
+
+// поиск
+const q = document.getElementById('q'), sug = document.getElementById('suggest');
+let sugIdx = -1, sugItems = [];
+function norm(s) { return s.toLowerCase().replace(/ё/g, 'е'); }
+q.addEventListener('input', () => {
+  const v = norm(q.value.trim()); sugIdx = -1;
+  if (v.length < 2) { sug.style.display = 'none'; return; }
+  sugItems = MO.filter(d => norm(d.n).includes(v) || norm(d.full || '').includes(v))
+    .sort((a, b) => norm(a.n).indexOf(v) - norm(b.n).indexOf(v)).slice(0, 8);
+  sug.innerHTML = sugItems.map((d, i) => `<button type="button" role="option" data-i="${i}">${esc(d.n)} <span class="reg">— ${esc(d.r)}</span></button>`).join('')
+    || '<div style="padding:10px 14px" class="muted">Нет в данных</div>';
+  sug.style.display = 'block';
+});
+q.addEventListener('keydown', e => {
+  if (sug.style.display !== 'block') return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sugIdx = Math.max(0, Math.min(sugItems.length - 1, sugIdx + (e.key === 'ArrowDown' ? 1 : -1)));
+    [...sug.children].forEach((b, i) => b.classList.toggle('on', i === sugIdx)); }
+  if (e.key === 'Enter' && sugItems.length) { select(sugItems[Math.max(0, sugIdx)].id, true); }
+});
+sug.addEventListener('click', e => { const b = e.target.closest('button'); if (b) select(sugItems[+b.dataset.i].id, true); });
+document.addEventListener('click', e => { if (!e.target.closest('.search')) sug.style.display = 'none'; });
+
+// ---------- карточка ----------
+let current = null, mapMode = 'peers';
+const MODES = [['peers', 'Сопоставимые'], ['type', 'Тип выбранного'], ['all', 'Все типы по очереди'], ['div', 'Расхождение с типом']];
+document.getElementById('mapModes').innerHTML = MODES.map(([k, l]) => `<button type="button" data-m="${k}" aria-pressed="${k === mapMode}">${l}</button>`).join('');
+document.getElementById('mapModes').onclick = e => { const m = e.target.dataset.m; if (!m) return; mapMode = m;
+  [...e.currentTarget.children].forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); drawMain(); };
+let cycleTimer = null, cycleIdx = 0;
+
+function drawMain() {
+  const d = current; const el = document.getElementById('mainMap'), lg = document.getElementById('mainLegend');
+  clearInterval(cycleTimer);
+  const off = css('--map-off'), ink = css('--ink');
+  if (mapMode === 'peers') {
+    const peers = new Set(d.pe), col = tColor(d.t);
+    drawMap(el, id => id === d.id ? ink : peers.has(id) ? col : off, {onClick: id => select(id, false),
+      dots: [...d.pe.map(id => byId.get(id)).filter(Boolean).map(p => ({id: p.id, lat: p.lat, lon: p.lon, r: 4, fill: col})),
+             {id: d.id, lat: d.lat, lon: d.lon, r: 6, fill: ink}], label: 'Выбранный муниципалитет и 15 сопоставимых'});
+    lg.innerHTML = `<span><i class="dot" style="background:${ink}"></i>${esc(d.n)}</span><span><i class="dot" style="background:${col}"></i>15 сопоставимых</span><span><i class="dot" style="background:${off}"></i>остальные</span>`;
+  } else if (mapMode === 'type') {
+    const col = tColor(d.t);
+    drawMap(el, id => { const m = byId.get(id); return id === d.id ? ink : m && m.t === d.t ? col : off; }, {onClick: id => select(id, false),
+      dots: [{id: d.id, lat: d.lat, lon: d.lon, r: 6, fill: ink}]});
+    lg.innerHTML = `<span><i class="dot" style="background:${col}"></i>${esc(T[d.t].name)} — ${fmt.format(T[d.t].size)} МО</span><span><i class="dot" style="background:${ink}"></i>${esc(d.n)}</span>`;
+  } else if (mapMode === 'all') {
+    const step = () => { const t = TYPES[cycleIdx % TYPES.length], col = tColor(t);
+      drawMap(el, id => { const m = byId.get(id); return m && m.t === t ? col : off; }, {onClick: id => select(id, false)});
+      lg.innerHTML = `<span><i class="dot" style="background:${col}"></i><b>${esc(T[t].name)}</b>&nbsp;— ${fmt.format(T[t].size)} МО</span><span class="tiny">типы сменяются каждые 2,5 с</span>`; cycleIdx++; };
+    step(); cycleTimer = setInterval(step, 2500);
+  } else {
+    const warn = css('--warn');
+    drawMap(el, id => { const m = byId.get(id); return m && m.d ? warn : off; }, {onClick: id => select(id, false),
+      dots: [{id: d.id, lat: d.lat, lon: d.lon, r: 6, fill: ink}]});
+    lg.innerHTML = `<span><i class="dot" style="background:${warn}"></i>флаг расхождения — ${fmt.format(M.n_div)} МО</span><span><i class="dot" style="background:${ink}"></i>${esc(d.n)}</span>`;
+  }
+}
+
+const POT = [['spend_month', 'Траты жителя в месяц', rub], ['growth_2024', 'Рост трат за год', sgn],
+  ['share_Общественное питание', 'Доля общепита', pct], ['share_Маркетплейсы', 'Доля маркетплейсов', pct],
+  ['spend_to_salary', 'Траты к зарплате', pct], ['salary', 'Зарплата (Росстат)', rub]];
+const potVal = (m, key) => { const p = m.pot[key]; return p ? p[0] : null; };
+
+function select(id, scroll) {
+  const d = byId.get(id); if (!d) return; current = d; sug.style.display = 'none'; q.value = '';
+  history.replaceState(null, '', '?mo=' + id + (params.get('embed') === '1' ? '&embed=1' : '') + (scroll ? '#card' : location.hash));
+  document.getElementById('cRegion').textContent = d.r;
+  document.getElementById('cName').textContent = d.n;
+  document.getElementById('cChips').innerHTML =
+    `<span class="chip"><i class="dot" style="background:${tColor(d.t)}"></i>${esc(T[d.t].name)}</span>` +
+    `<span class="chip">Траты жителя ${rub(d.sp)} в месяц</span><span class="chip">Рост трат ${sgn(d.g)}</span>` +
+    (d.pop ? `<span class="chip">${fmt.format(d.pop)} жителей</span>` : '');
+  drawMain();
+  // потенциал
+  const group = [d, ...d.pe.map(i => byId.get(i)).filter(Boolean)];
+  document.getElementById('pot').innerHTML = POT.map(([k, lab, f]) => {
+    const p = d.pot[k]; if (!p) return '';
+    const vals = group.map(m => potVal(m, k)).filter(v => v != null);
+    if (!vals.length) return '';
+    const x = d3.scaleLinear().domain(d3.extent(vals)).nice().range([6, 294]);
+    const dots = group.slice(1).map(m => potVal(m, k)).filter(v => v != null)
+      .map(v => `<circle cx="${x(v)}" cy="11" r="4" fill="${css('--ink-3')}" opacity=".55"/>`).join('');
+    const me = p[0] != null ? `<circle cx="${x(p[0])}" cy="11" r="7" fill="${tColor(d.t)}" stroke="${css('--surface')}" stroke-width="2"/>` : '';
+    return `<div class="pot-row"><div>${lab}<div class="tiny">${f(p[0])}</div></div>
+      <svg viewBox="0 0 300 22" preserveAspectRatio="none" aria-label="${lab}"><line x1="6" x2="294" y1="11" y2="11" stroke="${css('--line')}"/>${dots}${me}</svg>
+      <div class="rank">${p[1] ? p[1] + ' из ' + p[2] : '—'}</div></div>`;
+  }).join('');
+  // опыт
+  document.getElementById('exp').innerHTML = d.ex.map(([pid, g, diffs]) => { const p = byId.get(pid); if (!p) return '';
+    return `<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><a href="?mo=${pid}#card" data-go="${pid}">${esc(p.n)}</a><span class="g">${sgn(g)}</span></div>
+    <div class="tiny">${esc(p.r)}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${diffs.map(([f, dir]) => `<span class="chip">${esc(f)}: ${dir}</span>`).join('')}</div></div>`; }).join('')
+    + `<p class="tiny" style="margin:0">У выбранного: ${sgn(d.g)}. Отличия — в стандартных отклонениях признака по стране, показаны три самых сильных.</p>`;
+  // расхождение
+  const tw = d.tw || [];
+  const moved = d.mv, first = tw[0], last = tw[tw.length - 1];
+  document.getElementById('div').innerHTML =
+    `<div class="status"><span class="ic" style="background:${d.d ? css('--warn') : css('--good')};color:#fff">${d.d ? '!' : '✓'}</span><div>${
+      d.d ? (moved ? `<b>Сменил тип за год.</b> В начале 2024 года ближе всего был тип «${esc(T[first]?.name || first)}», к концу года — «${esc(T[d.t].name)}».`
+                   : `<b>Уходит от своего типа.</b> Расстояние до центра типа «${esc(T[d.t].name)}» растёт быстрее, чем у 95% муниципалитетов.`)
+          : `<b>Устойчив в своём типе.</b> Все 12 окон 2024 года ближе всего к центру типа «${esc(T[d.t].name)}».`}</div></div>
+     <div class="strip">${tw.map(t => `<i style="background:${tColor(t)}" title="${esc(T[t]?.name || 'нет данных')}"></i>`).join('')}</div>
+     <div class="strip-lab"><span>окно до янв. 2024</span><span>до дек. 2024</span></div>`;
+  // таблица сопоставимых
+  document.getElementById('peerTable').innerHTML = '<tr><th>Муниципалитет</th><th>Регион</th><th>Тип</th><th class="num">Сходство</th><th class="num">Траты</th></tr>' +
+    d.pe.map((pid, i) => { const p = byId.get(pid); if (!p) return '';
+      return `<tr class="click" data-go="${pid}"><td>${esc(p.n)}</td><td class="muted">${esc(p.r)}</td><td><i class="dot" style="background:${tColor(p.t)}"></i></td><td class="num">${d.pd[i].toFixed(2)}</td><td class="num">${rub(p.sp)}</td></tr>`; }).join('');
+  document.getElementById('localNote').textContent = `Из экономически сопоставимых — в пределах ${M.cfg.radius_km} км по дорогам: опыт соседей проще перенять.`;
+  document.getElementById('localList').innerHTML = d.lp.length ? d.lp.map(pid => { const p = byId.get(pid);
+    return p ? `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><a href="?mo=${pid}#card" data-go="${pid}">${esc(p.n)}</a> <span class="tiny">${esc(p.r)} · ${esc(T[p.t].name)}</span></div>` : ''; }).join('')
+    : '<p class="small muted">Сопоставимых в этом радиусе нет.</p>';
+  const url = location.origin && location.origin !== 'null' ? location.origin + location.pathname : 'index.html';
+  document.getElementById('embedCode').textContent = `<iframe src="${url}?mo=${d.id}&embed=1" width="100%" height="900" style="border:0"></iframe>`;
+  document.getElementById('apiPath').textContent = `outputs/dataset/api/${d.id}.json`;
+  if (scroll) document.getElementById('card').scrollIntoView({behavior: 'smooth'});
+}
+document.addEventListener('click', e => { const a = e.target.closest('[data-go]'); if (a) { e.preventDefault(); select(+a.dataset.go, true); } });
+
+// ---------- типы ----------
+function drawTypes() {
+  const LAB = M.labels;
+  document.getElementById('typeCards').innerHTML = TYPES.map(t => { const x = T[t];
+    const z = Object.entries(x.z).filter(([k, v]) => v != null).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 6);
+    const bars = z.map(([k, v]) => { const w = Math.min(Math.abs(v), 2) / 2 * 50;
+      return `<div>${esc(LAB[k] || k)}</div><svg viewBox="0 0 100 16" preserveAspectRatio="none"><line x1="50" x2="50" y1="0" y2="16" stroke="${css('--line-strong')}"/><rect x="${v > 0 ? 50 : 50 - w}" y="3" width="${w}" height="10" rx="2" fill="${tColor(t)}"/></svg>`; }).join('');
+    return `<div class="card type-card"><canvas width="640" height="373" data-t="${t}" aria-label="Карта типа ${esc(x.name)}"></canvas>
+      <h3><i class="dot" style="background:${tColor(t)}"></i>${esc(x.name)} <span class="tiny">${fmt.format(x.size)} МО</span></h3>
+      <p class="small muted" style="margin-bottom:6px">${esc(x.short)}</p>
+      <div class="fca"><b>Формальное понятие.</b> Муниципалитеты, у которых одновременно:<ul>${x.fca.intent.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
+      Таких в стране ${fmt.format(x.fca.extent)}; ${pct(x.fca.precision)} из них — этот тип, и они покрывают ${pct(x.fca.recall)} типа.</div>
+      <div class="tiny" style="margin-top:10px">Самые сильные отличия от страны, в стандартных отклонениях (влево — ниже, вправо — выше):</div>
+      <div class="bars">${bars}</div></div>`; }).join('');
+  document.querySelectorAll('#typeCards canvas').forEach(cv => {
+    const t = cv.dataset.t, ctx = cv.getContext('2d'), proj = makeProjection(cv.width, cv.height), path = d3.geoPath(proj, ctx);
+    const on = tColor(t), off = css('--map-off');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    for (const f of fc.features) { const m = byId.get(+f.properties.territory_id);
+      ctx.beginPath(); path(f); ctx.fillStyle = m && m.t === t ? on : off; ctx.fill(); }
+    ctx.fillStyle = on;  // маленькие МО — точкой
+    for (const m of MO) if (m.t === t && (t === '2.2' || t === '2.1')) { const [x, y] = proj([m.lon, m.lat]); ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 7); ctx.fill(); }
+  });
+}
+
+// ---------- динамика ----------
+function drawChange() {
+  const tr = METH.trans, max = d3.max(tr.values.flat());
+  const moved = tr.values.flatMap((r, i) => r.map((v, j) => ({from: tr.index[i], to: tr.columns[j], v}))).filter(c => c.from !== c.to).sort((a, b) => b.v - a.v);
+  const top = moved[0];
+  document.getElementById('changeLead').textContent =
+    `Типология строится по данным всего 2024 года, а затем каждый месяц муниципалитет относится к ближайшему типу по данным последних 12 месяцев. От месяца к месяцу тип сохраняют почти все, но за год ${fmt.format(M.n_moved)} муниципалитетов сменили тип. Главный поток — ${fmt.format(top.v)} муниципалитетов из типа «${T[top.from].name}» в тип «${T[top.to].name}».`;
+  const cell = v => { const a = v / max; return `background:color-mix(in srgb, var(--seq-3) ${Math.round(Math.sqrt(a) * 90)}%, var(--surface-2));color:${a > .35 ? '#fff' : 'var(--ink)'}`; };
+  document.getElementById('matrix').innerHTML = `<table class="matrix"><tr><th></th>${tr.columns.map(c => `<th title="${esc(T[c].name)}">${c}</th>`).join('')}</tr>` +
+    tr.values.map((r, i) => `<tr><th title="${esc(T[tr.index[i]].name)}">${tr.index[i]} ${esc(T[tr.index[i]].name)}</th>${r.map(v => `<td style="${cell(v)}">${v}</td>`).join('')}</tr>`).join('') + '</table>';
+  // небольшие графики по типам — по одному цвету на график
+  const tk = METH.track_market, el = document.getElementById('trackCharts'); el.innerHTML = '';
+  const all = Object.values(tk.types).flat().filter(v => v != null), y = d3.scaleLinear().domain([d3.min(all) * .95, d3.max(all) * 1.02]);
+  TYPES.forEach(t => { const vals = tk.types[t]; if (!vals) return;
+    const w = 300, h = 72, x = d3.scaleLinear().domain([0, vals.length - 1]).range([4, w - 60]); y.range([h - 6, 22]);
+    const line = d3.line().x((v, i) => x(i)).y(v => y(v)).defined(v => v != null);
+    const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${w} ${h}`);
+    svg.append('path').attr('d', line(vals)).attr('fill', 'none').attr('stroke', tColor(t)).attr('stroke-width', 2);
+    svg.append('text').attr('x', w - 56).attr('y', y(vals[vals.length - 1]) + 4).text(pct(vals[vals.length - 1]));
+    svg.append('text').attr('x', 4).attr('y', 11).text(T[t].name);
+  });
+  el.insertAdjacentHTML('beforeend', `<p class="tiny">Шкала общая для всех типов; окна с концом в январе — декабре 2024 года.</p>`);
+}
+
+// ---------- невидимая экономика ----------
+function drawHidden() {
+  const vals = MO.map(d => d.ss).filter(v => v != null).sort(d3.ascending);
+  const qs = [0.2, 0.4, 0.6, 0.8].map(p => d3.quantileSorted(vals, p));
+  const cols = ['--seq-0', '--seq-1', '--seq-2', '--seq-3', '--seq-4'].map(css);
+  const color = v => v == null ? css('--map-off') : cols[d3.bisect(qs, v)];
+  drawMap(document.getElementById('hiddenMap'), id => color(byId.get(id)?.ss), {onClick: id => select(id, true), label: 'Траты к зарплате'});
+  const edges = [vals[0], ...qs, vals[vals.length - 1]];
+  document.getElementById('hiddenLegend').innerHTML = cols.map((c, i) => `<span><i class="dot" style="background:${c};border-radius:2px"></i>${pct(edges[i])}–${pct(edges[i + 1])}</span>`).join('') + `<span><i class="dot" style="background:${css('--map-off')};border-radius:2px"></i>нет данных</span>`;
+  document.getElementById('hiddenByType').innerHTML = '<table><tr><th>Тип</th><th class="num">Медиана</th></tr>' + TYPES.map(t => {
+    const v = d3.median(MO.filter(d => d.t === t && d.ss != null), d => d.ss);
+    return `<tr><td><i class="dot" style="background:${tColor(t)}"></i> ${esc(T[t].name)}</td><td class="num">${pct(v)}</td></tr>`; }).join('') + '</table>';
+  const top = MO.filter(d => d.ss != null && d.pop > 10000).sort((a, b) => b.ss - a.ss).slice(0, 8);
+  document.getElementById('hiddenTop').innerHTML = '<table>' + top.map(d => `<tr class="click" data-go="${d.id}"><td>${esc(d.n)}<div class="tiny">${esc(d.r)}</div></td><td class="num">${pct(d.ss)}</td></tr>`).join('') + '</table><p class="tiny">Муниципалитеты с населением больше 10 тыс. человек.</p>';
+}
+
+// ---------- игра ----------
+const CATS = ['Продовольствие', 'Общественное питание', 'Здоровье', 'Транспорт', 'Маркетплейсы', 'Прочее'];
+let score = 0, rounds = 0;
+function newRound() {
+  const pool = MO.filter(d => d.pe.length && d.sh && d.pop > 5000);
+  const d = pool[Math.floor(Math.random() * pool.length)];
+  const right = byId.get(d.pe[0]);
+  const others = MO.filter(m => m.t !== d.t && m.id !== d.id && m.sh);
+  const wrong = d3.shuffle(others.slice()).slice(0, 2);
+  const opts = d3.shuffle([right, ...wrong]);
+  document.getElementById('gName').textContent = `${d.n}, ${d.r}`;
+  const mx = d3.max(CATS, c => d3.max(opts.concat([d]), m => m.sh[c]));
+  const bars = m => CATS.map(c => `<div>${c}</div><div class="b" style="width:${(m.sh[c] || 0) / mx * 100}%"></div><div class="tiny">${pct(m.sh[c])}</div>`).join('');
+  document.getElementById('gBars').innerHTML = bars(d);
+  document.getElementById('gMsg').textContent = '';
+  const el = document.getElementById('gOpts');
+  el.innerHTML = opts.map((m, i) => `<button class="opt" type="button" data-i="${i}"><b>${esc(m.n)}</b><div class="tiny">${esc(m.r)}</div><div class="share-bars" style="margin-top:8px;display:none">${bars(m)}</div></button>`).join('');
+  el.onclick = e => { const b = e.target.closest('.opt'); if (!b || el.dataset.done === '1') return; el.dataset.done = '1';
+    const pick = opts[+b.dataset.i]; rounds++; if (pick.id === right.id) score++;
+    [...el.children].forEach((c, i) => { c.querySelector('.share-bars').style.display = 'grid';
+      if (opts[i].id === right.id) c.classList.add('right'); else if (c === b) c.classList.add('wrong'); });
+    document.getElementById('gMsg').innerHTML = (pick.id === right.id ? '<b>Верно.</b> ' : '<b>Модель выбрала другого.</b> ') +
+      `Ближайший по 30 признакам — ${esc(right.n)} (тип «${esc(T[right.t].name)}»). Модель сравнивает не только структуру трат, но и уровень трат, рост, демографию, занятость и доступность рынков. <a href="?mo=${d.id}#card" data-go="${d.id}">Открыть карточку</a>`;
+    document.getElementById('gScore').textContent = `Счёт: ${score} из ${rounds}`; };
+  el.dataset.done = '0';
+}
+document.getElementById('gNext').onclick = newRound;
+
+// ---------- метод ----------
+function table(el, cols, rows) {
+  document.getElementById(el).innerHTML = '<tr>' + cols.map(c => `<th class="${c[2] ? 'num' : ''}">${c[1]}</th>`).join('') + '</tr>' +
+    rows.map(r => '<tr>' + cols.map(c => `<td class="${c[2] ? 'num' : ''}">${c[2] ? c[2](r[c[0]]) : esc(r[c[0]])}</td>`).join('') + '</tr>').join('');
+}
+function drawMethod() {
+  const RULE = {structure: 'Структура трат (косинус)', corr: 'Корреляция приростов', lagcorr: 'Лаговая корреляция ±2 мес.', dtw: 'DTW-сходство рядов', road: 'Дорожная близость', fused: 'Слияние: структура + дорога'};
+  const f3 = v => v == null ? '—' : (+v).toFixed(3), f0 = v => fmt.format(Math.round(v)), f2 = v => (+v).toFixed(2);
+  table('rulesTable', [['rule', 'Правило'], ['feature_homophily', 'Однородность соседей', f2], ['leiden_modularity', 'Модульность Leiden', f2], ['same_region_share', 'Рёбра внутри региона', pct], ['median_edge_km', 'Медиана длины ребра, км', f0]],
+    METH.rules.map(r => ({...r, rule: RULE[r.rule] || r.rule})));
+  // синтетика
+  const s = Object.entries(METH.synth).filter(([k]) => k !== 'mean_rank'), el = document.getElementById('synthChart'); el.innerHTML = '';
+  const w = 640, bh = 22, h = s.length * (bh + 6) + 24, x = d3.scaleLinear().domain([0, 1]).range([90, w - 50]);
+  const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${w} ${h}`);
+  svg.append('g').attr('class', 'grid').selectAll('line').data([0, .25, .5, .75, 1]).join('line').attr('x1', x).attr('x2', x).attr('y1', 0).attr('y2', h - 18);
+  svg.append('g').selectAll('text').data([0, .25, .5, .75, 1]).join('text').attr('x', x).attr('y', h - 4).attr('text-anchor', 'middle').text(v => (v * 100) + '%');
+  s.forEach(([k, v], i) => { const yy = i * (bh + 6);
+    svg.append('text').attr('x', 80).attr('y', yy + bh * .7).attr('text-anchor', 'end').text(k);
+    svg.append('rect').attr('x', x(0)).attr('y', yy).attr('width', Math.max(2, x(v) - x(0))).attr('height', bh).attr('rx', 4).attr('fill', ['SW', 'CH', 'MQ'].includes(k) ? css('--seq-3') : css('--ink-3'));
+    svg.append('text').attr('x', x(v) + 6).attr('y', yy + bh * .7).text(Math.round(v * 12) + ' из 12'); });
+  // ξ: две панели, одна шкала на панель
+  const xi = METH.xi.filter(r => r.k === 8), ex = document.getElementById('xiChart'); ex.innerHTML = '';
+  [['SW', 'SW — разделение по признакам'], ['MQ', 'MQ — модульность сети']].forEach(([m, lab]) => {
+    const W = 320, H = 150, xs = d3.scalePoint().domain(xi.map(r => r.xi)).range([40, W - 22]), ys = d3.scaleLinear().domain(d3.extent(xi, r => r[m])).nice().range([H - 22, 18]);
+    const sv = d3.select(ex).append('svg').attr('viewBox', `0 0 ${W} ${H}`).style('width', '50%').style('max-width', '380px').style('display', 'inline-block');
+    sv.append('text').attr('x', 30).attr('y', 11).text(lab + ', K = 8');
+    sv.append('g').attr('class', 'grid').selectAll('line').data(ys.ticks(3)).join('line').attr('x1', 30).attr('x2', W - 10).attr('y1', ys).attr('y2', ys);
+    sv.append('g').selectAll('text').data(ys.ticks(3)).join('text').attr('x', 26).attr('y', v => ys(v) + 3).attr('text-anchor', 'end').text(v => v.toFixed(2));
+    sv.append('g').selectAll('text').data(xi).join('text').attr('x', r => xs(r.xi)).attr('y', H - 6).attr('text-anchor', 'middle').text(r => 'ξ=' + r.xi);
+    sv.append('path').attr('d', d3.line().x(r => xs(r.xi)).y(r => ys(r[m]))(xi)).attr('fill', 'none').attr('stroke', css('--seq-3')).attr('stroke-width', 2);
+    sv.append('g').selectAll('circle').data(xi).join('circle').attr('cx', r => xs(r.xi)).attr('cy', r => ys(r[m])).attr('r', r => r.xi === M.cfg.xi ? 6 : 4)
+      .attr('fill', r => r.xi === M.cfg.xi ? css('--accent') : css('--seq-3')).attr('stroke', css('--surface')).attr('stroke-width', 2);
+  });
+  const MNAME = {kefrin: 'KEFRiN (признаки + сеть)', leiden: 'Leiden (сеть)', spectral: 'Спектральная (сеть)', kmeans: 'k-средних (признаки)', gmm: 'GMM (признаки)', ward: 'Уорд (признаки)'};
+  const g6 = METH.grid.filter(r => r.rule === 'fused' && r.k_target === 6);
+  table('methodsTable', [['method', 'Метод'], ['SW', 'SW ↑', f3], ['CH', 'CH ↑', f0], ['S_Dbw', 'S_Dbw ↓', f3], ['AVI', 'AVI ↑', f3], ['AVU', 'AVU ↓', f3], ['ANUI', 'ANUI ↑', f3], ['MQ', 'MQ ↑', f3]],
+    g6.map(r => ({...r, method: MNAME[r.method] || r.method})));
+  const F = METH.final;
+  document.getElementById('finalTable').innerHTML = `<tr><th>Уровень</th><th>Кандидаты K</th><th>Голоса SW / CH / MQ</th><th>Выбрано</th></tr>` +
+    [['Макротипы', METH.macro], ...[1, 2].map(m => [`Подтипы макротипа ${m}`, METH.sub.filter(r => r.macro === m)])].map(([lab, rows]) => {
+      const v = ['SW', 'CH', 'MQ'].map(k => rows.reduce((a, b) => b[k] > a[k] ? b : a)[k === 'SW' ? 'k' : 'k']);
+      const votes = ['SW', 'CH', 'MQ'].map(k => rows.reduce((a, b) => b[k] > a[k] ? b : a).k);
+      const cnt = d3.rollup(votes, v => v.length, d => d); const best = [...cnt].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+      return `<tr><td>${lab}</td><td>${rows.map(r => r.k).join(', ')}</td><td>${votes.join(' / ')}</td><td>${best}</td></tr>`; }).join('') +
+    `<tr><td colspan="4" class="small muted">Итог — 5 типов. Индексы итогового разбиения: SW ${f3(F.SW)}, CH ${f0(F.CH)}, S_Dbw ${f3(F.S_Dbw)}, AVI ${f3(F.AVI)}, AVU ${f3(F.AVU)}, ANUI ${f3(F.ANUI)}, MQ ${f3(F.MQ)}.</td></tr>`;
+}
+
+function redrawAll() { drawTypes(); drawChange(); drawHidden(); drawMethod(); if (current) select(current.id, false); }
+drawTypes(); drawChange(); drawHidden(); drawMethod(); newRound();
+const start = +params.get('mo') || (MO.find(d => d.n === 'Комсомольск-на-Амуре') || MO[0]).id;
+select(start, false);
+</script>
+</body>
+</html>

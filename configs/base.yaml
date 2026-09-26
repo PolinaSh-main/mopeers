@@ -78,7 +78,7 @@ cluster:
   log_features: [population, salary, market_access, retail_pc, paid_services_pc, invest_pc, housing_m2_pc,
                  jobs_per_capita]
   clip_z: 5              # стандартизованные признаки обрезаются на ±clip_z
-  kefrin_xi: 1.0         # вес сети в KEFRiN (вес признаков rho = 1)
+  kefrin_xi: 2.0         # вес сети в KEFRiN (вес признаков rho = 1); выбран по outputs/cluster/kefrin_xi.csv
   kefrin_n_init: 3
   xi_grid: [0, 1, 2, 5, 10, 20, 50]   # перебор веса сети
   xi_k: [4, 8]
@@ -118,3 +118,10 @@ typology:             # двухуровневая типология; xi — п
   k_macro: [2, 3, 4, 5, 6, 7, 8]
   k_sub: [2, 3, 4, 5]
   min_split_size: 60   # макротип меньше этого не делится
+
+news:                 # новостной слой: разметка на Kaggle (GPU), модель GigaChat 3.1 10B-A1.8B, MIT
+  kaggle_user: pasheviakova
+  kernel_slug: mopeers-news
+  categories: [закрытие или сокращение производства, открытие или расширение производства, стройка и инфраструктура,
+               транспорт и логистика, торговля и услуги, бюджет и социальные выплаты, чрезвычайное происшествие,
+               демография и миграция, не про экономику]

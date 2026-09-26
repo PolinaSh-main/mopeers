@@ -115,9 +115,9 @@ def compare(cfg=None, end=None):
     f = f.loc[ids]
     months = window_months(panel, end)
     dist = road_distances(cfg, ids)
-    x = f.drop(columns=["window_end"]).to_numpy()
-    x = (x - np.nanmean(x, 0)) / np.nanstd(x, 0)
-    x = np.nan_to_num(x)
+    from .cluster import feature_matrix
+    ctx = pd.read_parquet(proc / "context.parquet")
+    x = feature_matrix(f.reset_index(), ctx, ids, cfg)[0].to_numpy()  # те же 30 признаков, что в кластеризации
     region = mo.loc[ids, "region_code"].to_numpy()
     rng = np.random.default_rng(0)
     ri, rj = rng.integers(0, len(ids), 20000), rng.integers(0, len(ids), 20000)

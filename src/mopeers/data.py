@@ -83,7 +83,11 @@ def build(cfg=None):
     mo.to_parquet(out / "mo.parquet")
     panel.to_parquet(out / "panel.parquet")
     ctx.to_parquet(out / "context_base.parquet")
-    from .rosstat import context as rosstat_context
+    from .rosstat import build_catalog, fetch_indicators, context as rosstat_context
+    if not path(cfg, "rosstat_catalog").exists():
+        build_catalog(cfg)
+    specs = cfg["rosstat"]["context"].values()
+    fetch_indicators(sorted({s["code"] for s in specs} | {s["base_code"] for s in specs if "base_code" in s}), cfg)
     ctx = ctx.join(rosstat_context(cfg, mo, ctx["population"]))
     ctx.to_parquet(out / "context.parquet")
     print("МО в справочнике", len(mo), "| МО в панели трат", panel.territory_id.nunique(),
