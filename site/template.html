@@ -287,6 +287,10 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
 
   <h3 style="margin-top:32px">5. Итоговое разбиение</h3>
   <div class="tablewrap"><table id="finalTable"></table></div>
+
+  <h3 style="margin-top:32px">6. Внешняя проверка</h3>
+  <p class="muted small" id="mobNote"></p>
+  <div class="tablewrap"><table id="mobTable"></table></div>
   <p class="small muted" style="margin-top:12px">Полное описание — в методологическом отчёте, код и конфигурации — в репозитории.</p>
 </div></section>
 
@@ -298,7 +302,7 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
     <li><code>outputs/dataset/api/&lt;territory_id&gt;.json</code> — полная карточка муниципалитета.</li>
     <li><code>outputs/typology/types.parquet</code> — типы; <code>outputs/dynamics/labels_by_window.parquet</code> — типы по 12 окнам.</li>
   </ul>
-  <p class="small muted">Данные СберИндекса распространяются по лицензии CC BY-SA 4.0; производный датасет — по той же лицензии, с указанием источника «СберИндекс». Код — открытая лицензия, указана в репозитории.</p>
+  <p class="small muted">Данные СберИндекса распространяются по лицензии CC BY-SA 4.0; производный датасет — по той же лицензии, с указанием источника «СберИндекс». Код — лицензия MIT.</p>
 </div></section>
 </main>
 
@@ -647,8 +651,15 @@ function drawMethod() {
     `<tr><td colspan="4" class="small muted">Итог — 5 типов. Индексы итогового разбиения: SW ${f3(F.SW)}, CH ${f0(F.CH)}, S_Dbw ${f3(F.S_Dbw)}, AVI ${f3(F.AVI)}, AVU ${f3(F.AVU)}, ANUI ${f3(F.ANUI)}, MQ ${f3(F.MQ)}.</td></tr>`;
 }
 
-function redrawAll() { drawTypes(); drawChange(); drawHidden(); drawMethod(); if (current) select(current.id, false); }
-drawTypes(); drawChange(); drawHidden(); drawMethod(); newRound();
+function drawChecks() {
+  const mb = METH.mobility, t = mb.test, st = METH.stability;
+  document.getElementById('mobNote').textContent = `Индекс мобильности СберИндекса — на каком расстоянии от центра своих покупок совершают покупки жители, км. Он опубликован для МО Северо-Западного округа и в построении типов не участвовал. Типы различаются по нему: тест Краскела — Уоллиса, n = ${t.n}, p < 10⁻³⁷, тип объясняет ${Math.round(t.eta2 * 100)}% дисперсии рангов.` +
+    (st ? ` Устойчивость: на ${st.ari_types.count} подвыборках по 80% МО согласие с итоговыми типами ARI = ${st.ari_types['50%'].toFixed(2)} в медиане (1 — полное совпадение), для макротипов — ${st.ari_macro['50%'].toFixed(2)}.` : '');
+  document.getElementById('mobTable').innerHTML = '<tr><th>Тип</th><th class="num">МО в СЗФО</th><th class="num">Мобильность, км</th></tr>' +
+    mb.by_type.map(r => `<tr><td><i class="dot" style="background:${tColor(r.type)}"></i> ${esc(T[r.type].name)}</td><td class="num">${r.count}</td><td class="num">${r.mobility_km.toFixed(2).replace('.', ',')}</td></tr>`).join('');
+}
+function redrawAll() { drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); if (current) select(current.id, false); }
+drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); newRound();
 const start = +params.get('mo') || (MO.find(d => d.n === 'Комсомольск-на-Амуре') || MO[0]).id;
 select(start, false);
 </script>

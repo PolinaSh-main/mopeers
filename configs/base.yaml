@@ -118,6 +118,8 @@ typology:             # двухуровневая типология; xi — п
   k_macro: [2, 3, 4, 5, 6, 7, 8]
   k_sub: [2, 3, 4, 5]
   min_split_size: 60   # макротип меньше этого не делится
+  n_boot: 20           # подвыборок для проверки устойчивости
+  boot_share: 0.8
 
 news:                 # новостной слой: разметка на Kaggle (GPU), модель GigaChat 3.1 10B-A1.8B, MIT
   kaggle_user: pasheviakova

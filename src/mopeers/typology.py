@@ -87,3 +87,52 @@ def build(cfg=None, end=None):
     centers.to_parquet(out / "centers.parquet")
     print("итоговых типов:", res.type.nunique(), "| ICVI:", {k: round(float(v), 3) for k, v in q.items()})
     return res
+
+
+def stability(cfg=None):
+    """Устойчивость типологии: `n_boot` подвыборок по `boot_share` МО; на каждой — та же двухуровневая процедура
+    с числами кластеров итоговой типологии; согласие с итоговыми типами на общих МО — ARI (1 — полное совпадение)."""
+    from sklearn.metrics import adjusted_rand_score
+    cfg = cfg or load_config()
+    tc = cfg["typology"]
+    proc = path(cfg, "processed")
+    panel = pd.read_parquet(proc / "panel.parquet")
+    feats = pd.read_parquet(proc / "features.parquet")
+    ctx = pd.read_parquet(proc / "context.parquet")
+    mo = pd.read_parquet(proc / "mo.parquet")
+    ref = pd.read_parquet(path(cfg, "outputs") / "typology" / "types.parquet")
+    end = feats.window_end.max()
+    f = feats[(feats.window_end == end) & feats.territory_id.isin(ref.index)]
+    ids = list(f.territory_id)
+    x = feature_matrix(f, ctx, ids, cfg)[0].to_numpy()
+    fw = f.set_index("territory_id").loc[ids]
+    a = knn_graph(similarity(tc["rule"], fw, panel, ids, window_months(panel, end), road_distances(cfg, ids), cfg),
+                  cfg["network"]["k"]).tocsr()
+    k1 = ref.macro.nunique()
+    k2 = ref.groupby("macro").type.nunique()
+    rng = np.random.default_rng(cfg.get("seed", 0))
+    rows = []
+    for b in range(tc["n_boot"]):
+        idx = np.sort(rng.choice(len(ids), int(len(ids) * tc["boot_share"]), replace=False))
+        xa, aa = x[idx], a[idx][:, idx]
+        lab1 = run_method(tc["method"], k1, xa, aa, seed=b, xi=tc["xi"], n_init=cfg["cluster"]["kefrin_n_init"])
+        codes = np.empty(len(idx), dtype=object)
+        # макротипы подвыборки сопоставляются с итоговыми по большинству
+        ref_macro = ref.macro.to_numpy()[idx]
+        for m in range(k1):
+            sel = np.where(lab1 == m)[0]
+            major = pd.Series(ref_macro[sel]).mode().iloc[0]
+            kk = int(k2.get(major, 1))
+            if kk > 1 and len(sel) > kk:
+                lab2 = run_method(tc["method"], kk, xa[sel], aa[sel][:, sel], seed=b, xi=tc["xi"],
+                                  n_init=cfg["cluster"]["kefrin_n_init"])
+            else:
+                lab2 = np.zeros(len(sel), dtype=int)
+            codes[sel] = [f"{m}.{s}" for s in lab2]
+        rows.append({"boot": b, "ari_macro": adjusted_rand_score(ref_macro, lab1),
+                     "ari_types": adjusted_rand_score(ref.type.to_numpy()[idx], codes)})
+        print(rows[-1], flush=True)
+    t = pd.DataFrame(rows)
+    t.to_csv(path(cfg, "outputs") / "typology" / "stability.csv", index=False)
+    print(t[["ari_macro", "ari_types"]].describe().round(3).to_string())
+    return t

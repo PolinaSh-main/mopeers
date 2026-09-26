@@ -86,7 +86,13 @@ def collect(cfg):
                      on=["territory_id", "window_end"], how="inner") if len(lab_w) else feats
     track = fw.groupby(["tw", "window_end"])["share_Маркетплейсы"].median().unstack()
 
+    mob = pd.read_csv(out / "interpret" / "mobility_by_type.csv", dtype={"type": str})
+    mobt = pd.read_csv(out / "interpret" / "mobility_test.csv", index_col=0).iloc[:, 0]
+    stab = out / "typology" / "stability.csv"
+    stab = pd.read_csv(stab)[["ari_macro", "ari_types"]].describe().round(3).to_dict() if stab.exists() else None
     method = {
+        "mobility": {"by_type": mob.round(3).to_dict("records"), "test": {k: _r(v, 6) for k, v in mobt.items()}},
+        "stability": stab,
         "rules": net.round(4).to_dict("records"),
         "grid": grid.round(4).to_dict("records"),
         "synth": {k: _r(v, 3) for k, v in synth.items()},

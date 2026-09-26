@@ -122,3 +122,37 @@ def build(cfg=None, labels=None):
     print("дерево глубины", ic["tree_depth"], "— точность", round(tree_acc, 3))
     print(cross.round(2).to_string())
     return prof_z, fca, cross
+
+
+NW_REGIONS = ["Республика Карелия", "Республика Коми", "Архангельская", "Ненецкий", "Вологодская", "Калининградская",
+              "Ленинградская", "Мурманская", "Новгородская", "Псковская", "Санкт-Петербург"]
+
+
+def external_mobility(cfg=None):
+    """Внешняя проверка: индекс мобильности СберИндекса (в кластеризации не участвовал) по типам.
+
+    Индекс опубликован для 297 МО Северо-Западного ФО (2024 г.); сопоставление — по полному названию МО
+    внутри регионов СЗФО (внутри округа названия уникальны). Тест Краскела — Уоллиса и доля дисперсии,
+    объяснённая типом (η², по рангам).
+    """
+    from scipy.stats import kruskal
+    cfg = cfg or load_config()
+    mo = pd.read_parquet(path(cfg, "processed") / "mo.parquet")
+    types = pd.read_parquet(path(cfg, "outputs") / "typology" / "types.parquet").type
+    m = pd.read_parquet(path(cfg, "mobility"))
+    m = m[m.period == m.period.min()]
+    nw = mo[mo.region_name.str.contains("|".join(NW_REGIONS))].reset_index()
+    full = nw.drop_duplicates("full_name", keep=False).set_index("full_name").territory_id
+    m = m.assign(territory_id=m.ref_area.str.replace(r"\s+", " ", regex=True).map(full)).dropna(subset=["territory_id"])
+    m["type"] = m.territory_id.astype(int).map(types)
+    m = m.dropna(subset=["type"])
+    groups = [g.value.to_numpy() for _, g in m.groupby("type") if len(g) >= 5]
+    h, p = kruskal(*groups)
+    n, k = len(m), len(groups)
+    eta2 = (h - k + 1) / (n - k)
+    res = m.groupby("type").value.agg(["count", "median"]).rename(columns={"median": "mobility_km"})
+    out = path(cfg, "outputs") / "interpret"
+    res.to_csv(out / "mobility_by_type.csv")
+    pd.Series({"n": n, "H": h, "p_value": p, "eta2": eta2}).to_csv(out / "mobility_test.csv")
+    print(res.round(2).to_string()); print(f"n = {n}, H = {h:.1f}, p = {p:.2e}, η² = {eta2:.2f}")
+    return res
