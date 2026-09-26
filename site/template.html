@@ -97,7 +97,7 @@ nav.links a:hover{color:var(--ink)}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-weight:600;color:var(--ink-2);font-size:13px}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 tr.click{cursor:pointer} tr.click:hover{background:var(--surface-2)}
 .tablewrap{overflow-x:auto}
 .types{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
@@ -133,7 +133,7 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
 .embed-only header.top,.embed-only .hide-embed{display:none}
 @media (max-width:600px){ .brand{display:none} }
 @media (max-width:860px){
-  .grid2,.game{grid-template-columns:1fr}
+  .grid2,.game{grid-template-columns:minmax(0,1fr)}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
   .steps{grid-template-columns:1fr 1fr}
   .pot-row{grid-template-columns:110px minmax(0,1fr) 52px}
