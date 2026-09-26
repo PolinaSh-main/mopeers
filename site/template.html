@@ -242,6 +242,7 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
   <div class="grid2">
     <div>
       <p class="muted">Росстат публикует зарплату только работников организаций без малого бизнеса. СберИндекс видит, сколько на самом деле тратят жители. Если жители тратят большую долю официальной зарплаты, значит, у них есть доходы, которых нет в этой статистике: малый бизнес и самозанятость, пенсии и выплаты, работа в другом муниципалитете, неформальный заработок.</p>
+      <p class="muted" id="hiddenExample"></p>
       <div class="mapbox" id="hiddenMap"></div>
       <div class="legend" id="hiddenLegend"></div>
     </div>
@@ -598,6 +599,8 @@ function drawHidden() {
   document.getElementById('hiddenByType').innerHTML = '<table><tr><th>Тип</th><th class="num">Медиана</th></tr>' + TYPES.map(t => {
     const v = d3.median(MO.filter(d => d.t === t && d.ss != null), d => d.ss);
     return `<tr><td><i class="dot" style="background:${tColor(t)}"></i> ${esc(T[t].name)}</td><td class="num">${pct(v)}</td></tr>`; }).join('') + '</table>';
+  const ex = MO.find(d => d.n === 'Солнечногорск');
+  if (ex) document.getElementById('hiddenExample').innerHTML = `Пример — <a href="?mo=${ex.id}#card" data-go="${ex.id}">Солнечногорск</a> в Подмосковье: жители тратят с карт ${rub(ex.sp)} в месяц при средней зарплате местных организаций ${rub(ex.sal)}. Так выглядит пригород, откуда многие, вероятно, ездят на работу в Москву: их доход не попадает в зарплату организаций своего муниципалитета.`;
   const top = MO.filter(d => d.ss != null && d.pop > 10000).sort((a, b) => b.ss - a.ss).slice(0, 8);
   document.getElementById('hiddenTop').innerHTML = '<table>' + top.map(d => `<tr class="click" data-go="${d.id}"><td>${esc(d.n)}<div class="tiny">${esc(d.r)}</div></td><td class="num">${pct(d.ss)}</td></tr>`).join('') + '</table><p class="tiny">Муниципалитеты с населением больше 10 тыс. человек.</p>';
 }
