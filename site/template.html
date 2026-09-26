@@ -146,7 +146,7 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
 <header class="top"><div class="wrap">
   <div class="brand">Сопоставимые муниципалитеты</div>
   <nav class="links">
-    <a href="#card">Карточка МО</a><a href="#types">Типы</a><a href="#change">Динамика</a>
+    <a href="#found">Находки</a><a href="#card">Карточка МО</a><a href="#types">Типы</a><a href="#change">Динамика</a>
     <a href="#hidden">Невидимая экономика</a><a href="#game">Игра</a><a href="#method">Метод</a><a href="#data">Данные</a>
   </nav>
   <button class="theme-btn" id="themeBtn" type="button">Тема</button>
@@ -162,6 +162,11 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
   </div>
   <div class="examples">Примеры: <span id="exBtns"></span></div>
   <div class="tiles" id="tiles"></div>
+</div></section>
+
+<section id="found" class="hide-embed"><div class="wrap">
+  <h2>Что мы нашли</h2>
+  <div class="types" id="findings"></div>
 </div></section>
 
 <section id="card"><div class="wrap">
@@ -393,6 +398,27 @@ const EXAMPLES = ['Комсомольск-на-Амуре', 'Братск', 'С�
 document.getElementById('exBtns').innerHTML = EXAMPLES.filter(n => MO.find(d => d.n === n))
   .map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join(', ');
 document.getElementById('exBtns').onclick = e => { const n = e.target.dataset.n; if (n) select(MO.find(d => d.n === n).id, true); };
+
+// находки
+(function(){
+  const F = M.findings, mb = Object.fromEntries(METH.mobility.by_type.map(r => [r.type, r.mobility_km]));
+  const ss = t => d3.median(MO.filter(d => d.t === t && d.ss != null), d => d.ss);
+  const km = v => v.toFixed(1).replace('.', ',');
+  const top = (() => { const tr = METH.trans; let b = null; tr.values.forEach((r, i) => r.forEach((v, j) => { if (i !== j && (!b || v > b.v)) b = {v, from: tr.index[i], to: tr.columns[j]}; })); return b; })();
+  const cards = [
+    [`${F.same_region_median} из 15`, 'сопоставимых — из того же региона',
+     `У типичного муниципалитета ${15 - F.same_region_median} из 15 ближайших по экономике находятся в других регионах (медиана по ${fmt.format(F.same_region_n)} МО вне Москвы и Петербурга). Сравнение со средним по своему региону ставит рядом непохожие территории.`],
+    [pct(F.tree_threshold), 'доли общепита в тратах — водораздел',
+     `Одно правило делит страну на две экономики: ниже порога — стареющая глубинка и удалённая периферия, выше — города, столичные районы и ресурсные территории. Дерево решений глубины 3 на порогах такого вида верно относит ${pct(F.tree_acc)} муниципалитетов к их типу.`],
+    [`${km(mb['1.1'])} км и ${km(mb['2.2'])} км`, 'радиус покупок в глубинке и в столицах',
+     `Независимый индекс мобильности СберИндекса подтверждает типы: тип объясняет ${Math.round(METH.mobility.test.eta2 * 100)}% различий в радиусе покупок жителей Северо-Запада, хотя в построении типов индекс не участвовал.`],
+    [`${pct(ss('2.3'))} против ${pct(ss('1.1'))}`, 'доля зарплаты, которую тратят жители',
+     `В ресурсных территориях жители тратят с карт меньше трети официальной зарплаты, в глубинке — почти половину. Высокая доля указывает на доходы вне статистики зарплат организаций: малый бизнес, пенсии, работу в других местах.`],
+    [fmt.format(top.v), `МО перешли из «${T[top.from].name}» в «${T[top.to].name}»`,
+     `Девять из десяти из них уже в начале 2024 года стояли на границе двух типов: расстояния до центров обоих типов почти равны. Флаг расхождения в карточке отмечает такие муниципалитеты.`],
+  ];
+  document.getElementById('findings').innerHTML = cards.map(([b, s1, p1]) => `<div class="card"><div style="font-size:28px;font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums">${b}</div><div style="font-weight:600;margin:4px 0 8px">${s1}</div><p class="small muted" style="margin:0">${p1}</p></div>`).join('');
+})();
 
 // поиск
 const q = document.getElementById('q'), sug = document.getElementById('suggest');

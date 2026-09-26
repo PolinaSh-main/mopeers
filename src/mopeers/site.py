@@ -104,7 +104,16 @@ def collect(cfg):
         "track_market": {"windows": [str(c) for c in track.columns],
                          "types": {str(k): [_r(v, 4) for v in row] for k, row in track.iterrows()}},
     }
-    meta = {"n_mo": len(mos), "months": f"{ends[0][:4]}-01 — {ends[-1]}", "first_month": "2023-01",
+    # находки для первого экрана — считаются из данных при сборке
+    import re
+    reg = mo.region_name
+    same = pd.Series({i: sum(reg.get(int(x)) == reg.get(i) for x in r.split(";")) for i, r in peers.peers.items()})
+    same = same[~reg.reindex(same.index).isin(["Москва", "Санкт-Петербург"])]
+    first = re.search(r"\|--- (.+?) <= ([\d.]+)", (out / "interpret" / "tree_rules.txt").read_text(encoding="utf-8"))
+    tree_acc = float(re.search(r"([\d.]+)", (out / "interpret" / "tree_rules.txt").read_text(encoding="utf-8")).group(1))
+    findings = {"same_region_median": float(same.median()), "same_region_n": int(len(same)),
+                "tree_feature": first.group(1), "tree_threshold": float(first.group(2)), "tree_acc": tree_acc}
+    meta = {"findings": findings, "n_mo": len(mos), "months": f"{ends[0][:4]}-01 — {ends[-1]}", "first_month": "2023-01",
             "last_month": ends[-1], "windows": ends, "n_moved": int(flags.moved.sum()),
             "n_div": int(flags.divergence.sum()), "labels": LABELS, "cfg": {
                 "k": cfg["network"]["k"], "xi": cfg["typology"]["xi"], "n_peers": cfg["product"]["n_peers"],
