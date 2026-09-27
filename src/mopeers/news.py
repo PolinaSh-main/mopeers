@@ -77,8 +77,12 @@ def build(cfg=None):
 
     Ручная выборка — 120 заголовков, размеченных вручную (`kaggle/gold_labels.json`). Для каждой модели — согласие
     с ручной разметкой по признаку «экономика» (каппа Коэна). Дальше используется модель с большей каппой: доля МО
-    с экономическими событиями каждой категории в двух группах и точный тест Фишера.
+    с экономическими событиями каждой категории в двух группах и точный тест Фишера. У МО с большим числом заголовков
+    экономическое событие находится чаще, поэтому различие групп проверяется и с поправкой на число заголовков:
+    логистическая регрессия «есть экономическое событие» на группу и логарифм числа заголовков.
     """
+    import numpy as np
+    import statsmodels.formula.api as smf
     from scipy.stats import fisher_exact
     from sklearn.metrics import cohen_kappa_score
     cfg = cfg or load_config()
@@ -112,6 +116,16 @@ def build(cfg=None):
                      "share_control": c / max(c + d, 1), "odds_ratio": odds, "p_value": p})
     t = pd.DataFrame(rows)
     t.to_csv(out / "divergence_vs_control.csv", index=False)
+    mo = pd.DataFrame({"group": groups, "titles": news.groupby("territory_id").size().reindex(groups.index).fillna(0)})
+    mo["has"] = groups.index.isin(econ.territory_id.unique()).astype(int)
+    mo["divergent"] = (mo.group == "расхождение").astype(int)
+    mo["log_titles"] = np.log1p(mo.titles)
+    fit = smf.logit("has ~ divergent + log_titles", mo).fit(disp=0)
+    vol = pd.DataFrame({"mean_titles": mo.groupby("group").titles.mean(), "median_titles": mo.groupby("group").titles.median(),
+                        "mo_with_titles": mo[mo.titles > 0].groupby("group").size()})
+    vol["logit_coef_divergent"], vol["logit_p_divergent"] = fit.params["divergent"], fit.pvalues["divergent"]
+    vol.to_csv(out / "divergence_adjusted.csv")
+    print(vol.round(3).to_string())
     print(agree.round(3).to_string())
     print("заголовков:", len(news), "| МО:", news.territory_id.nunique(), "| экономических:", len(econ))
     print(t.round(3).to_string())

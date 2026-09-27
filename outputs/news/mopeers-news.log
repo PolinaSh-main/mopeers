@@ -1,0 +1,51 @@
+[{"stream_name":"stderr","time":12.933494385,"data":"W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)\n"}
+,{"stream_name":"stdout","time":31.274035261,"data":"Warning: could not connect to a running Ollama instance\n"}
+,{"stream_name":"stdout","time":31.274084964,"data":"Warning: client version is 0.34.4\n"}
+,{"stream_name":"stdout","time":63.289601061,"data":"новости 0 4\n"}
+,{"stream_name":"stdout","time":594.086403791,"data":"новости 25 128\n"}
+,{"stream_name":"stdout","time":1120.050698642,"data":"новости 50 237\n"}
+,{"stream_name":"stdout","time":1648.489174572,"data":"новости 75 485\n"}
+,{"stream_name":"stdout","time":2172.988868223,"data":"новости 100 587\n"}
+,{"stream_name":"stdout","time":2702.482969421,"data":"новости 125 725\n"}
+,{"stream_name":"stdout","time":3232.566239056,"data":"новости 150 801\n"}
+,{"stream_name":"stdout","time":3769.26041136,"data":"новости 175 1076\n"}
+,{"stream_name":"stdout","time":4307.247488503,"data":"новости 200 1263\n"}
+,{"stream_name":"stdout","time":4834.574624004,"data":"новости 225 1319\n"}
+,{"stream_name":"stdout","time":5358.388864204,"data":"новости 250 1419\n"}
+,{"stream_name":"stdout","time":5883.884544728,"data":"новости 275 1498\n"}
+,{"stream_name":"stdout","time":6410.192246996,"data":"новости 300 1818\n"}
+,{"stream_name":"stdout","time":6937.88092526,"data":"новости 325 2108\n"}
+,{"stream_name":"stdout","time":7472.474989135,"data":"новости 350 2781\n"}
+,{"stream_name":"stdout","time":7578.793861873,"data":"заголовков 2842 МО 281\n"}
+,{"stream_name":"stdout","time":10040.516482602,"data":"qwen35 размечено 2841 из 2842 за 41 мин\n"}
+,{"stream_name":"stdout","time":10825.366521003,"data":"gigachat размечено 2604 из 2842 за 13 мин\n"}
+,{"stream_name":"stdout","time":10825.498441685,"data":"ize =    29.31 MiB\n"}
+,{"stream_name":"stdout","time":10825.498480029,"data":"sched_reserve:      CUDA0 compute buffer size =   296.19 MiB\n"}
+,{"stream_name":"stdout","time":10825.49848624,"data":"sched_reserve:      CUDA1 compute buffer size =   296.19 MiB\n"}
+,{"stream_name":"stdout","time":10825.498491497,"data":"sched_reserve:  CUDA_Host compute buffer size =    80.14 MiB\n"}
+,{"stream_name":"stdout","time":10825.498496658,"data":"clip_ctx: CLIP using CUDA0 backend\n"}
+,{"stream_name":"stdout","time":10825.498501723,"data":"reserve_compute_meta:      CUDA0 compute buffer size =   248.10 MiB\n"}
+,{"stream_name":"stdout","time":10825.498506118,"data":"time=2026-09-27T03:50:16.123Z level=INFO source=sched.go:1018 msg=\"selecting single GPU for llama-server model\" main_gpu=0 id=0 filter_id=0 library=CUDA name=CUDA0 description=\"Tesla T4\" integrated=false predicted=\"10.7 GiB\" available=\"14.5 GiB\"\n"}
+,{"stream_name":"stdout","time":10825.498513063,"data":"time=2026-09-27T03:50:16.123Z level=INFO source=sched.go:1137 msg=\"selecting GPU backend for llama-server model\" library=CUDA gpu_count=1 available_gpu_count=2\n"}
+,{"stream_name":"stdout","time":10825.4985175,"data":"time=2026-09-27T03:50:16.125Z level=INFO source=sched.go:625 msg=\"gpu memory\" id=0 library=CUDA available=\"14.0 GiB\" free=\"14.5 GiB\" minimum=\"457.0 MiB\" overhead=\"0 B\"\n"}
+,{"stream_name":"stdout","time":10825.498523048,"data":"cmn  common_param:   - CUDA0   : Tesla T4 (14911 MiB, 14806 MiB free)\n"}
+,{"stream_name":"stdout","time":10825.498527735,"data":"cmn  common_param: system_info: n_threads = 2 (n_threads_batch = 2) / 4 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | LLAMAFILE = 1 | REPACK = 1 | CUDA : ARCHS = 750,800,860,870,890,900,1000,1030,1100,1200,1210 | USE_GRAPHS = 1 | FA_QUANTS = q4_0-q4_0,q8_0-q8_0,f16-f16,bf16-bf16 | \n"}
+,{"stream_name":"stdout","time":10825.49854728,"data":"common_memory_breakdown_print: |   - CUDA0 (T4)         | 14911 = 14704 + (11776 = 10621 +     936 +     218) +      -11569 |\n"}
+,{"stream_name":"stdout","time":10825.498551329,"data":"llama_prepare_model_devices: using device CUDA0 (Tesla T4) (0000:00:04.0) - 14704 MiB free\n"}
+,{"stream_name":"stdout","time":10825.498554576,"data":"load_tensors: offloading output layer to GPU\n"}
+,{"stream_name":"stdout","time":10825.498557604,"data":"load_tensors: offloading 25 repeating layers to GPU\n"}
+,{"stream_name":"stdout","time":10825.498560841,"data":"load_tensors: offloaded 27/27 layers to GPU\n"}
+,{"stream_name":"stdout","time":10825.498564317,"data":"load_tensors:        CUDA0 model buffer size = 10621.82 MiB\n"}
+,{"stream_name":"stdout","time":10825.498567837,"data":"load_tensors:    CUDA_Host model buffer size =   199.62 MiB\n"}
+,{"stream_name":"stdout","time":10825.498571981,"data":"llama_context:  CUDA_Host  output buffer size =     1.96 MiB\n"}
+,{"stream_name":"stdout","time":10825.498575681,"data":"llama_kv_cache:      CUDA0 KV buffer size =   936.00 MiB\n"}
+,{"stream_name":"stdout","time":10825.498579811,"data":"sched_reserve:      CUDA0 compute buffer size =   218.76 MiB\n"}
+,{"stream_name":"stdout","time":10825.498584,"data":"sched_reserve:  CUDA_Host compute buffer size =    28.02 MiB\n"}
+,{"stream_name":"stdout","time":10825.823073944,"data":"готово\n"}
+,{"stream_name":"stderr","time":10829.009698548,"data":"\u001b[?2026h\u001b[?25l\u001b[1G\u001b[K\u001b[?25h\u001b[?2026l\u001b[?25l\u001b[2K\u001b[1G\u001b[?25h\u001b[?2026h\u001b[?25l\u001b[1G\u001b[K\u001b[?25h\u001b[?2026l\u001b[?25l\u001b[2K\u001b[1G\u001b[?25h/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":10829.009739544,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":10829.434968959,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":10829.435002188,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":10831.53723086,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":10833.01419936,"data":"[NbConvertApp] Writing 410052 bytes to __results__.html\n"}
+]

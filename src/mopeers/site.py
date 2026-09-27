@@ -106,8 +106,14 @@ def collect(cfg):
         nt = pd.read_csv(nw).set_index("category")
         nn = pd.read_parquet(out / "news" / "news.parquet")
         a = nt.loc["любое экономическое событие"]
+        from .news import mo_list
+        ag = pd.read_csv(out / "news" / "labeler_agreement.csv").set_index("model").kappa
+        adj = pd.read_csv(out / "news" / "divergence_adjusted.csv", index_col=0)
         news = {"n_titles": len(nn), "n_mo": int(nn.territory_id.nunique()), "div": _r(a.share_divergent, 3),
-                "ctrl": _r(a.share_control, 3), "p": _r(a.p_value, 3)}
+                "ctrl": _r(a.share_control, 3), "p": _r(a.p_value, 3), "n_group": len(mo_list(cfg)) // 2,
+                "kappa": {k: _r(v, 2) for k, v in ag.items()}, "p_adj": _r(adj.logit_p_divergent.iloc[0], 3),
+                "titles_div": _r(adj.loc["расхождение", "mean_titles"], 1),
+                "titles_ctrl": _r(adj.loc["контроль", "mean_titles"], 1)}
     ext = None
     if (out / "interpret" / "sme_by_type.csv").exists() and (out / "interpret" / "nightlights_by_type.csv").exists():
         by = pd.read_csv(out / "interpret" / "sme_by_type.csv", dtype={"type": str}).merge(
