@@ -41,14 +41,17 @@ def push(cfg=None):
     nc = cfg["news"]
     rows = mo_list(cfg)
     src = (ROOT / "kaggle" / "news_kernel.py").read_text(encoding="utf-8")
+    gold = (ROOT / "kaggle" / "gold_labels.json").read_text(encoding="utf-8")
     src = src.replace("__MO_LIST__", json.dumps(rows, ensure_ascii=False)).replace(
-        "__CATEGORIES__", json.dumps(nc["categories"], ensure_ascii=False))
+        "__CATEGORIES__", json.dumps(nc["categories"], ensure_ascii=False)).replace(
+        "__GOLD__", json.dumps(json.loads(gold), ensure_ascii=False))
     build_dir = ROOT / "kaggle" / "build"
     build_dir.mkdir(parents=True, exist_ok=True)
     (build_dir / "news_kernel.py").write_text(src, encoding="utf-8")
     user = nc["kaggle_user"]
     meta = {"id": f"{user}/{nc['kernel_slug']}", "title": nc["kernel_slug"], "code_file": "news_kernel.py",
             "language": "python", "kernel_type": "script", "is_private": True, "enable_gpu": True,
+            "machine_shape": "NvidiaTeslaT4",
             "enable_internet": True, "dataset_sources": [], "competition_sources": [], "kernel_sources": []}
     (build_dir / "kernel-metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     r = _kaggle("kernels", "push", "-p", str(build_dir))
@@ -70,26 +73,46 @@ def pull(cfg=None):
 
 
 def build(cfg=None):
-    """Сравнение групп «расхождение» и «контроль» по доле МО с экономическими событиями каждой категории."""
+    """Выбор модели разметки по ручной выборке и сравнение групп «расхождение» и «контроль».
+
+    Ручная выборка — 120 заголовков, размеченных вручную (`kaggle/gold_labels.json`). Для каждой модели — согласие
+    с ручной разметкой по признаку «экономика» (каппа Коэна). Дальше используется модель с большей каппой: доля МО
+    с экономическими событиями каждой категории в двух группах и точный тест Фишера.
+    """
     from scipy.stats import fisher_exact
+    from sklearn.metrics import cohen_kappa_score
     cfg = cfg or load_config()
     out = path(cfg, "outputs") / "news"
     news = pd.read_parquet(out / "news.parquet")
+    gold = pd.read_parquet(out / "gold_pred.parquet")
+    models = [c.removesuffix("_economy") for c in gold.columns if c.endswith("_economy") and c != "economy"]
+    agree = []
+    for m in models:
+        ok = gold[f"{m}_economy"].notna()
+        g = gold[ok]
+        agree.append({"model": m, "kappa": cohen_kappa_score(g.economy, g[f"{m}_economy"].astype(bool)),
+                      "accuracy": (g.economy == g[f"{m}_economy"].astype(bool)).mean(),
+                      "share_true_manual": g.economy.mean(), "share_true_model": g[f"{m}_economy"].astype(bool).mean(),
+                      "n": int(ok.sum())})
+    agree = pd.DataFrame(agree).sort_values("kappa", ascending=False)
+    agree.to_csv(out / "labeler_agreement.csv", index=False)
+    best = agree.model.iloc[0]
     groups = pd.DataFrame(mo_list(cfg)).set_index("id").group
-    econ = news[news.economy.fillna(False)]
+    econ = news[news[f"{best}_economy"].fillna(False).astype(bool)]
     rows = []
     for cat in cfg["news"]["categories"] + ["любое экономическое событие"]:
-        sel = econ if cat == "любое экономическое событие" else econ[econ.category == cat]
+        sel = econ if cat == "любое экономическое событие" else econ[econ[f"{best}_category"] == cat]
         has = groups.index.isin(sel.territory_id.unique())
         a = int((has & (groups == "расхождение")).sum())
         b = int(((~has) & (groups == "расхождение")).sum())
         c = int((has & (groups == "контроль")).sum())
         d = int(((~has) & (groups == "контроль")).sum())
         odds, p = fisher_exact([[a, b], [c, d]])
-        rows.append({"category": cat, "share_divergent": a / max(a + b, 1), "share_control": c / max(c + d, 1),
-                     "odds_ratio": odds, "p_value": p})
+        rows.append({"category": cat, "model": best, "share_divergent": a / max(a + b, 1),
+                     "share_control": c / max(c + d, 1), "odds_ratio": odds, "p_value": p})
     t = pd.DataFrame(rows)
     t.to_csv(out / "divergence_vs_control.csv", index=False)
-    print("заголовков:", len(news), "| экономических:", len(econ))
+    print(agree.round(3).to_string())
+    print("заголовков:", len(news), "| МО:", news.territory_id.nunique(), "| экономических:", len(econ))
     print(t.round(3).to_string())
     return t

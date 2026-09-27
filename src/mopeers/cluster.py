@@ -21,7 +21,11 @@ FEATURE_METHODS = {"kmeans", "gmm", "ward"}
 
 
 def feature_matrix(feats, ctx, ids, cfg):
-    """Стандартизованная матрица признаков для кластеризации; пропуски — медианой."""
+    """Стандартизованная матрица признаков для кластеризации.
+
+    Пропуск заполняется средним по `impute_k` МО, ближайшим по известным признакам (KNNImputer, стандартизованные
+    единицы): МО без данных Росстата получает значение похожих МО, а не медиану страны.
+    """
     if len(set(ids)) == len(ids):
         f = feats.set_index("territory_id").loc[ids, cfg["cluster"]["window_features"]]
     else:  # несколько окон: строки берутся в порядке таблицы, ids = feats.territory_id
@@ -32,8 +36,10 @@ def feature_matrix(feats, ctx, ids, cfg):
     for col in cfg["cluster"].get("log_features", []):
         x[col] = np.log(x[col])
     x = x.replace([np.inf, -np.inf], np.nan)
-    x = x.fillna(x.median())
-    z = ((x - x.mean()) / x.std()).clip(-cfg["cluster"]["clip_z"], cfg["cluster"]["clip_z"])
+    from sklearn.impute import KNNImputer
+    z = (x - x.mean()) / x.std()
+    z = pd.DataFrame(KNNImputer(n_neighbors=cfg["cluster"]["impute_k"]).fit_transform(z), index=z.index, columns=z.columns)
+    z = z.clip(-cfg["cluster"]["clip_z"], cfg["cluster"]["clip_z"])
     return z, list(x.columns)
 
 

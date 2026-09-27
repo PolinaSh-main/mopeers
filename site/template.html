@@ -8,21 +8,21 @@
 <style>
 :root{
   color-scheme: light;
-  --bg:#fcfcfb; --surface:#ffffff; --surface-2:#f4f3f0; --line:#e3e1dc; --line-strong:#cfccc5;
-  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#7a7873;
-  --accent:#1a7f4b; --accent-ink:#ffffff;
-  --map-off:#e7e5e0; --map-stroke:#fcfcfb; --focus:#0b0b0b;
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f5f5f4; --line:#e6e6e6; --line-strong:#bdbdbd;
+  --ink:#111111; --ink-2:#4d4d4d; --ink-3:#7a7a7a;
+  --accent:#e0322b; --accent-ink:#ffffff;
+  --map-off:#e9e9e9; --map-stroke:#ffffff; --focus:#0b0b0b;
   --good:#1a7f4b; --warn:#b25e00;
   --t1:#2a78d6; --t2:#1baf7a; --t3:#eb6834; --t4:#c98500; --t5:#4a3aa7;
   --seq-0:#cde2fb; --seq-1:#86b6ef; --seq-2:#3987e5; --seq-3:#1c5cab; --seq-4:#0d366b;
-  --radius:10px;
+  --radius:2px; --serif:"PT Serif",Georgia,"Times New Roman",serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme: dark;
     --bg:#141413; --surface:#1a1a19; --surface-2:#232321; --line:#33332f; --line-strong:#46463f;
     --ink:#f5f4ef; --ink-2:#c3c2b7; --ink-3:#9a998f;
-    --accent:#3fb37a; --accent-ink:#0b0b0b;
+    --accent:#ff5a4f; --accent-ink:#0b0b0b;
     --map-off:#2c2c29; --map-stroke:#1a1a19; --focus:#ffffff;
     --t1:#3987e5; --t2:#199e70; --t3:#d95926; --t4:#c98500; --t5:#9085e9;
     --seq-0:#184f95; --seq-1:#256abf; --seq-2:#3987e5; --seq-3:#6da7ec; --seq-4:#b7d3f6;
@@ -32,19 +32,20 @@
   color-scheme: dark;
   --bg:#141413; --surface:#1a1a19; --surface-2:#232321; --line:#33332f; --line-strong:#46463f;
   --ink:#f5f4ef; --ink-2:#c3c2b7; --ink-3:#9a998f;
-  --accent:#3fb37a; --accent-ink:#0b0b0b;
+  --accent:#ff5a4f; --accent-ink:#0b0b0b;
   --map-off:#2c2c29; --map-stroke:#1a1a19; --focus:#ffffff;
   --t1:#3987e5; --t2:#199e70; --t3:#d95926; --t4:#c98500; --t5:#9085e9;
   --seq-0:#184f95; --seq-1:#256abf; --seq-2:#3987e5; --seq-3:#6da7ec; --seq-4:#b7d3f6;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:64px}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body{font-variant-numeric:lining-nums;margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration-color:var(--line-strong);text-underline-offset:3px}
 a:hover{text-decoration-color:var(--ink)}
 h1,h2,h3{line-height:1.15;margin:0 0 .5em;letter-spacing:-.01em;text-wrap:balance}
-h1{font-size:clamp(30px,5vw,52px);font-weight:750}
-h2{font-size:clamp(24px,3.4vw,34px);font-weight:700}
+h1,h2{font-family:var(--serif);font-weight:700;letter-spacing:0}
+h1{font-size:clamp(32px,5.4vw,60px);line-height:1.05}
+h2{font-size:clamp(26px,3.6vw,40px)}
 h3{font-size:18px;font-weight:650}
 p{margin:0 0 1em;max-width:70ch;text-wrap:pretty}
 .muted{color:var(--ink-2)} .small{font-size:14px} .tiny{font-size:12.5px;color:var(--ink-3)}
@@ -52,28 +53,34 @@ p{margin:0 0 1em;max-width:70ch;text-wrap:pretty}
 section{padding:56px 0;border-top:1px solid var(--line)}
 header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;align-items:center;gap:18px;height:56px}
-.brand{font-weight:700;white-space:nowrap}
-nav.links{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;font-size:14px}
+.brand{font-family:var(--serif);font-weight:700;font-size:17px;white-space:nowrap}
+nav.links{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;font-size:12px;text-transform:uppercase;letter-spacing:.07em}
 nav.links a{text-decoration:none;color:var(--ink-2);white-space:nowrap}
 nav.links a:hover{color:var(--ink)}
-.theme-btn{margin-left:auto;background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
-.hero{padding:56px 0 40px;border-top:0}
+.theme-btn{margin-left:auto;background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:0;padding:4px 10px;font:inherit;font-size:11px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
+.hero{padding:48px 0 40px;border-top:0}
+.bubbles{position:relative;margin:28px 0 6px}
+.bubbles svg{display:block;width:100%;height:auto}
+.bubbles circle.mo{cursor:pointer}
+.bubbles circle.mo:hover{stroke:var(--ink);stroke-width:1.5}
+.bubbles text.tl{font-family:var(--serif);font-size:14px;font-weight:700;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.bubbles text.tn{font-size:11px;fill:var(--ink-2);text-anchor:middle;pointer-events:none;text-transform:uppercase;letter-spacing:.06em}
 .lead{font-size:clamp(17px,2vw,20px);color:var(--ink-2);max-width:62ch}
 .search{position:relative;max-width:560px;margin:24px 0 8px}
-.search input{width:100%;font:inherit;font-size:18px;padding:14px 16px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.search input{width:100%;font:inherit;font-size:18px;padding:14px 16px;border-radius:0;border:1.5px solid var(--ink);background:var(--surface);color:var(--ink)}
 .search input:focus{outline:2px solid var(--focus);outline-offset:1px}
-.suggest{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;overflow:hidden;z-index:30;display:none;box-shadow:0 8px 24px rgb(0 0 0 / .12)}
+.suggest{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--surface);border:1.5px solid var(--ink);border-radius:0;overflow:hidden;z-index:30;display:none;box-shadow:0 8px 24px rgb(0 0 0 / .12)}
 .suggest button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 14px;font:inherit;color:var(--ink);cursor:pointer}
 .suggest button:hover,.suggest button.on{background:var(--surface-2)}
 .suggest .reg{color:var(--ink-3);font-size:13px}
 .examples{font-size:14px;color:var(--ink-2)} .examples button{font:inherit;background:none;border:0;padding:0 2px;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer}
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:32px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
-.tile b{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile{border-top:2px solid var(--ink);padding:10px 0 0}
+.tile b{display:block;font-family:var(--serif);font-size:38px;line-height:1.05;font-variant-numeric:lining-nums tabular-nums}
 .tile span{font-size:13.5px;color:var(--ink-2)}
 .grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:start}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 9px;border-radius:0;background:none;border:1px solid var(--line-strong);white-space:nowrap}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
 .mapbox{position:relative;width:100%}
 .mapbox svg{display:block;width:100%;height:auto}
@@ -84,11 +91,11 @@ nav.links a:hover{color:var(--ink)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .pot-row{display:grid;grid-template-columns:150px minmax(0,1fr) 58px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .pot-row:last-child{border-bottom:0}
-.pot-row .rank{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.pot-row .rank{text-align:right;font-variant-numeric:lining-nums tabular-nums;color:var(--ink-2)}
 .pot-row svg{width:100%;height:22px;display:block}
 .exp{display:grid;gap:10px}
 .exp .card{padding:12px 14px}
-.exp .g{font-variant-numeric:tabular-nums;font-weight:650}
+.exp .g{font-variant-numeric:lining-nums tabular-nums;font-weight:650}
 .status{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface-2);font-size:14px}
 .status .ic{font-weight:700;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px}
 .strip{display:flex;gap:2px;margin-top:8px}
@@ -97,7 +104,7 @@ nav.links a:hover{color:var(--ink)}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-weight:600;color:var(--ink-2);font-size:13px}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
 tr.click{cursor:pointer} tr.click:hover{background:var(--surface-2)}
 .tablewrap{overflow-x:auto}
 .types{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
@@ -107,11 +114,12 @@ tr.click{cursor:pointer} tr.click:hover{background:var(--surface-2)}
 .fca ul{margin:6px 0 6px 18px;padding:0}
 .bars{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 10px;font-size:13px;margin-top:10px;align-items:center}
 .bars svg{width:100%;height:16px;display:block}
-.mode-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.mode-btns button,.btn{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+.mode-btns{display:flex;flex-wrap:wrap;gap:0;margin-bottom:10px}
+.mode-btns button{margin:0 -1px -1px 0}
+.mode-btns button,.btn{font:inherit;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:7px 12px;border-radius:0;border:1px solid var(--ink);background:var(--surface);color:var(--ink);cursor:pointer}
 .mode-btns button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.matrix td{text-align:center;font-variant-numeric:tabular-nums;border:1px solid var(--bg);min-width:52px}
+.matrix td{text-align:center;font-variant-numeric:lining-nums tabular-nums;border:1px solid var(--bg);min-width:52px}
 .game{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
 .opts{display:grid;gap:10px}
 .opt{text-align:left;font:inherit;padding:12px 14px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
@@ -161,6 +169,11 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
     <div class="suggest" id="suggest" role="listbox"></div>
   </div>
   <div class="examples">Примеры: <span id="exBtns"></span></div>
+  <div class="bubbles" id="bubbles">
+    <div class="mode-btns" id="bubbleModes"></div>
+    <div id="bubbleSvg"></div>
+    <p class="tiny" id="bubbleNote"></p>
+  </div>
   <div class="tiles" id="tiles"></div>
 </div></section>
 
@@ -397,6 +410,77 @@ document.getElementById('tiles').innerHTML = [
   ['24', 'месяца данных, январь 2023 — декабрь 2024'],
   [fmt.format(M.n_moved), 'муниципалитетов сменили тип за 2024 год']
 ].map(([b, s]) => `<div class="tile"><b>${b}</b><span>${s}</span></div>`).join('');
+// облако: каждый МО — круг площадью по населению, МО сгруппированы по типам
+const BUB_MODES = [['type', 'Тип'], ['sp', 'Траты жителя'], ['g', 'Рост трат 2024'], ['d', 'Расхождение с типом']];
+let bubMode = 'type';
+function bubbleFill(d) {
+  if (bubMode === 'type') return tColor(d.t);
+  if (bubMode === 'd') return d.d ? css('--accent') : css('--map-off');
+  const v = bubMode === 'sp' ? d.sp : d.g;
+  if (v == null) return css('--map-off');
+  const qs = bubMode === 'sp' ? [20000, 25000, 32000, 42000] : [0.08, 0.13, 0.18, 0.24];
+  return css('--seq-' + qs.filter(q => v >= q).length);
+}
+function bubbleNote() {
+  return {type: 'Цвет — тип локальной экономики. Площадь круга — число жителей. Нажмите на круг, чтобы открыть карточку муниципалитета.',
+    sp: 'Цвет — средние траты жителя в месяц, 2024 год: до 20, 25, 32, 42 тыс. ₽ и больше (от светлого к тёмному).',
+    g: 'Цвет — номинальный рост средних трат жителя, 2024 год к 2023-му: до 8, 13, 18, 24% и больше.',
+    d: 'Красным — муниципалитеты с флагом расхождения: сменили тип за 2024 год или быстрее других удаляются от центра своего типа.'}[bubMode];
+}
+function drawBubbles() {
+  const el = document.getElementById('bubbleSvg');
+  const w = Math.max(320, el.clientWidth || 960), narrow = w < 700, gap = narrow ? 18 : 22, labH = 44;
+  // население неизвестно у части МО (например, районов Москвы) — берётся медиана типа
+  const groups = TYPES.map(t => {
+    const ms = MO.filter(d => d.t === t), med = d3.median(ms, d => d.pop) || 1;
+    return {t, leaves: ms.map(d => ({d, v: d.pop || med}))};
+  });
+  groups.forEach(g => g.total = d3.sum(g.leaves, x => x.v));
+  // площадь кластера пропорциональна населению типа; в ряд на широком экране, по два в ряд на узком
+  const perRow = narrow ? 2 : groups.length, rows = d3.range(Math.ceil(groups.length / perRow)).map(i => groups.slice(i * perRow, (i + 1) * perRow));
+  const k = d3.min(rows, r => (w - gap * (r.length - 1)) / d3.sum(r, g => 2 * Math.sqrt(g.total)));
+  let y0 = 0;
+  for (const r of rows) {
+    const rmax = d3.max(r, g => Math.sqrt(g.total) * k);
+    const used = d3.sum(r, g => 2 * Math.sqrt(g.total) * k) + gap * (r.length - 1);
+    let x0 = (w - used) / 2;
+    for (const g of r) {
+      g.r = Math.sqrt(g.total) * k; g.cx = x0 + g.r; g.cy = y0 + rmax; x0 += 2 * g.r + gap;
+      const root = d3.hierarchy({children: g.leaves}).sum(x => x.v || 0);
+      d3.pack().size([2 * g.r, 2 * g.r]).padding(0.5)(root);
+      g.nodes = root.leaves().map(n => ({...n.data.d, x: g.cx - g.r + n.x, y: g.cy - g.r + n.y, rr: n.r}));
+    }
+    y0 += 2 * rmax + labH + 10;
+  }
+  const h = Math.ceil(y0);
+  el.innerHTML = '';
+  const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${w} ${h}`).attr('role', 'img')
+    .attr('aria-label', 'Все муниципалитеты, сгруппированные по типам');
+  svg.selectAll('circle.mo').data(groups.flatMap(g => g.nodes)).join('circle').attr('class', 'mo')
+    .attr('cx', d => d.x).attr('cy', d => d.y).attr('r', d => Math.max(0.7, d.rr))
+    .attr('fill', d => bubbleFill(d)).attr('stroke', css('--surface')).attr('stroke-width', 0.4)
+    .on('mousemove', (ev, d) => showTip(ev, moTip(d.id))).on('mouseleave', hideTip)
+    .on('click', (ev, d) => select(d.id, true));
+  for (const g of groups) {
+    const words = T[g.t].name.split(' '), half = Math.ceil(words.length / 2);
+    const lines = words.length > 2 ? [words.slice(0, half).join(' '), words.slice(half).join(' ')] : [T[g.t].name];
+    const tx = svg.append('text').attr('class', 'tl').attr('x', g.cx).attr('y', g.cy + g.r + 18);
+    lines.forEach((l, i) => tx.append('tspan').attr('x', g.cx).attr('dy', i ? 16 : 0).text(l));
+    svg.append('text').attr('class', 'tn').attr('x', g.cx).attr('y', g.cy + g.r + 18 + 16 * lines.length)
+      .text(fmt.format(g.leaves.length) + ' МО');
+  }
+  document.getElementById('bubbleNote').textContent = bubbleNote();
+}
+document.getElementById('bubbleModes').innerHTML = BUB_MODES.map(([k, l]) =>
+  `<button type="button" data-m="${k}" aria-pressed="${k === bubMode}">${l}</button>`).join('');
+document.getElementById('bubbleModes').onclick = ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  bubMode = b.dataset.m;
+  document.querySelectorAll('#bubbleModes button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  drawBubbles();
+};
+addEventListener('resize', () => { clearTimeout(window._bt); window._bt = setTimeout(drawBubbles, 200); });
+
 const EXAMPLES = ['Комсомольск-на-Амуре', 'Братск', 'Суздальский', 'Сургут', 'Пресненский'];
 document.getElementById('exBtns').innerHTML = EXAMPLES.filter(n => MO.find(d => d.n === n))
   .map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join(', ');
@@ -428,7 +512,7 @@ document.getElementById('exBtns').onclick = e => { const n = e.target.dataset.n;
     [fmt.format(M.n_moved), 'муниципалитетов сменили тип за 2024 год',
      `После вычета общего для страны сдвига — например, роста доли маркетплейсов, который шёл во всех типах почти одинаково — тип сменили ${pct(M.n_moved / M.n_mo)} муниципалитетов. Флаг расхождения в карточке отмечает ${fmt.format(M.n_div)} МО, которые сменили тип или быстрее других удаляются от центра своего.`],
   ];
-  document.getElementById('findings').innerHTML = cards.map(([b, s1, p1]) => `<div class="card"><div style="font-size:28px;font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums">${b}</div><div style="font-weight:600;margin:4px 0 8px">${s1}</div><p class="small muted" style="margin:0">${p1}</p></div>`).join('');
+  document.getElementById('findings').innerHTML = cards.map(([b, s1, p1]) => `<div class="card"><div style="font-size:28px;font-weight:750;line-height:1.1;font-variant-numeric:lining-nums tabular-nums">${b}</div><div style="font-weight:600;margin:4px 0 8px">${s1}</div><p class="small muted" style="margin:0">${p1}</p></div>`).join('');
 })();
 
 // поиск
@@ -733,8 +817,8 @@ function drawNews() {
   const pc = v => Math.round(v * 100) + '%';
   document.getElementById('newsNote').textContent = `Проверка флага расхождения новостями. Для 167 МО с флагом и 167 МО без флага того же типа собраны заголовки 2024 года, где названо само МО (${fmt.format(n.n_titles)} заголовков по ${n.n_mo} МО), и размечены открытой моделью GigaChat 3.1: затрагивает ли событие экономику МО. Экономические события нашлись у ${pc(n.div)} МО с флагом и у ${pc(n.ctrl)} МО без флага (p = ${n.p.toFixed(2).replace('.', ',')}): связь не обнаружена. У типичного МО 2–3 заголовка за год, поэтому такая проверка заметила бы только сильную связь; следующий шаг — местные источники новостей.`;
 }
-function redrawAll() { drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); if (current) select(current.id, false); }
-drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); drawNews(); newRound();
+function redrawAll() { drawBubbles(); drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); if (current) select(current.id, false); }
+drawBubbles(); drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); drawNews(); newRound();
 const start = +params.get('mo') || (MO.find(d => d.n === 'Комсомольск-на-Амуре') || MO[0]).id;
 select(start, false);
 </script>

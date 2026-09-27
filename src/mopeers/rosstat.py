@@ -129,8 +129,9 @@ def _load(cfg, code, filters=None, period=None, year=None):
 def context(cfg, mo, population):
     """Показатели Росстата на МО: доля горожан, рождаемость, торговля, услуги, инвестиции, жильё, отраслевая занятость.
 
-    На жителя — по населению из пакета хакатона (`population`). Отраслевая доля занятости при известном итоге и
-    отсутствующем разделе считается нулём: Росстат не публикует раздел без работников или с единичными.
+    На жителя — по населению из пакета хакатона (`population`). Доля с флагом `zero_if_missing` при известном итоге
+    и отсутствующей части считается нулём: Росстат не публикует строку «городское население» у района без городов
+    и раздел занятости без работников.
     """
     specs = cfg["rosstat"]["context"]
     key = mo.oktmo8
@@ -145,7 +146,7 @@ def context(cfg, mo, population):
             base, _ = _load(cfg, s["base_code"], s.get("base_filters"), s.get("period"), year=years[name])
             b = key.map(base)
             v = v / b
-            if name.startswith("emp_"):
+            if s.get("zero_if_missing"):
                 v = v.where(v.notna() | b.isna(), 0.0)
         out[name] = v
     out = out.replace([float("inf"), float("-inf")], float("nan"))

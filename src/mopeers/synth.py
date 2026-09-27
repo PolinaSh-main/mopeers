@@ -26,7 +26,7 @@ from .cluster import HIGHER_BETTER, icvi, run_method
 from .config import load_config, path
 from .third_party import load
 
-RULES = ["plurality", "borda_all", "borda_3", "borda_blocks"]
+RULES = ["plurality", "borda_all", "borda_3", "borda_blocks", "borda_blocks_large", "borda_blocks_net", "borda_blocks_feat"]
 
 
 def _generator():
@@ -48,9 +48,20 @@ def choose(t, rule):
         s = _ranks(t, list(HIGHER_BETTER)).sum(axis=1)
     elif rule == "borda_3":
         s = _ranks(t, ["SW", "CH", "MQ"]).sum(axis=1)
-    elif rule == "borda_blocks":
+    elif rule.startswith("borda_blocks"):
+        # признаковый блок — средний ранг K по SW и CH, сетевой — ранг по MQ, веса равные. Ничья по сумме рангов
+        # разрешается: borda_blocks — меньшим K, _large — большим K, _net — лучшим рангом сетевого блока,
+        # _feat — лучшим рангом признакового блока (дальше — меньшим K)
         r = _ranks(t, ["SW", "CH", "MQ"])
-        s = (r.SW + r.CH) / 2 + r.MQ
+        feat, net = (r.SW + r.CH) / 2, r.MQ
+        s = feat + net
+        tied = s[s == s.min()].index
+        if rule == "borda_blocks_large":
+            return int(tied.max())
+        if rule in ("borda_blocks_net", "borda_blocks_feat"):
+            b = (net if rule == "borda_blocks_net" else feat)[tied]
+            return int(b[b == b.min()].index.min())
+        return int(tied.min())
     else:
         raise ValueError(rule)
     return int(s[s == s.min()].index.min())
@@ -61,7 +72,7 @@ def run(cfg=None, tag=""):
     sc = cfg["synthetic"]
     xi = cfg["typology"]["xi"]
     gen = _generator()
-    rows, meth_rows = [], []
+    rows, meth_rows, tables = [], [], []
     for k_true in sc["k_true"]:
         for pr_v in sc["pr_v"]:
             for level, (p_in, p_out) in sc["edge_levels"].items():
@@ -79,6 +90,7 @@ def run(cfg=None, tag=""):
                         lab = run_method("kefrin", k, y, a, seed=rep, xi=xi, n_init=cfg["cluster"]["kefrin_n_init"])
                         res.append({"k": k, **icvi(y, a, lab)})
                     t = pd.DataFrame(res).set_index("k")
+                    tables.append(t.reset_index().assign(k_true=k_true, pr_v=pr_v, edges=level, rep=rep))
                     picks = {m: int(t[m].idxmax() if up else t[m].idxmin()) for m, up in HIGHER_BETTER.items()}
                     picks.update({r: choose(t, r) for r in RULES})
                     base = {"k_true": k_true, "pr_v": pr_v, "edges": level, "rep": rep}
@@ -91,6 +103,7 @@ def run(cfg=None, tag=""):
     d = path(cfg, "outputs") / "cluster"
     d.mkdir(parents=True, exist_ok=True)
     out.to_csv(d / f"synthetic_k_choice{tag}.csv", index=False)
+    pd.concat(tables).to_csv(d / f"synthetic_icvi{tag}.csv", index=False)
     cols = list(HIGHER_BETTER) + RULES
     hit = pd.DataFrame({c: out.groupby("edges").apply(lambda g: (g[c] == g.k_true).mean()) for c in cols}).T
     hit["all"] = [(out[c] == out.k_true).mean() for c in cols]

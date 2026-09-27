@@ -132,7 +132,7 @@ def build(cfg=None, labels=None):
     # пороговые правила — в исходных единицах (траты в рублях), без остаточной категории
     from sklearn.model_selection import cross_val_score
     tree_x = raw_desc.drop(columns=[c for c in ic["exclude_features"] if c in raw_desc.columns])
-    tree_x = tree_x.fillna(tree_x.median())
+    # пропуски остаются: дерево sklearn обрабатывает их само (ветвь для пропуска выбирается при обучении)
     make_tree = lambda: DecisionTreeClassifier(max_depth=ic["tree_depth"], min_samples_leaf=ic["tree_min_leaf"],
                                                random_state=0)
     tree = make_tree().fit(tree_x, labels)

@@ -20,6 +20,8 @@ page.txt
 outputs/*.log
 data/processed/*
 !data/processed/rosstat_catalog.csv
+!data/processed/sme.parquet
+!data/processed/nightlights.parquet
 site/vendor/
 # рабочие документы — только локально
 CLAUDE.md

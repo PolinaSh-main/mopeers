@@ -16,16 +16,46 @@ paths:
   rosstat_dir: data/raw/rosstat
   third_party: third_party
 
+download:              # снимок исходных данных на 27.09.2026 — запасной источник (см. mopeers.download)
+  snapshot_url: https://github.com/PolinaSh-main/mopeers/releases/download/data-2026-09-27/mopeers-data.zip
+  snapshot_sha256: 9fdca6cc632b65301109a1e1f0298b1952a892d132556cee8471323ec325d95e
+monotowns:             # перечень моногородов с группами Фонда развития моногородов (статья Википедии, версия)
+  wiki_revision: 154521434
+  tickers:              # фрагмент названия градообразующего предприятия → тикер компании на Мосбирже (TQBR)
+    Северсталь: CHMF
+    Воркутауголь: CHMF
+    Карельский окатыш: CHMF
+    ОЛКОН: CHMF
+    Норильский никель: GMKN
+    Кольская ГМК: GMKN
+    Магнитогорский металлургический: MAGN
+    КАМАЗ: KMAZ
+    АЛРОСА: ALRS
+    Нижнекамскнефтехим: NKNC
+    Апатит: PHOR
+    Распадская: RASP
+    Южный Кузбасс: MTLR
+    Якутуголь: MTLR
+    Первоуральский новотрубный: TRMK
+    Северский трубный: TRMK
+    Синарский трубный: TRMK
+    Саяногорский алюминиевый: RUAL
+    СУАЛ: RUAL
+    Богословский алюминиевый: RUAL
+    Газпромнефть: SIBN
+    Новокуйбышевский НПЗ: ROSN
+    Сегежский ЦБК: SGZH
+    НЕФАЗ: NFAZ
+    Интер РАО: IRAO
 rosstat:
   base_url: https://storage.yandexcloud.net/tochno-st-catalog/Rosstat/data_bdmo_118_v20250918/by_indicator/
   suffix: 112_v20250918
   sections: [1, 2, 3, 5, 6, 7, 8, 9, 12, 13, 16, 18, 19, 20, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 50, 70]
   years: [2022, 2023, 2024]
-  # Показатели, которые взял IvanFrolovskiy/sberindex-atlas, плюс отобранные по каталогу
-  # (отбор и обоснование — data/processed/indicators.csv).
+  # Показатели БДМО для контекста МО: демография, доходы, торговля и услуги, инвестиции, жильё, занятость по отраслям
   base_codes: [Y48112027, Y48423007, Y48423005]
   context:                       # показатель: код Росстата, фильтр разреза, нормировка
-    urban_share: {code: Y48112027, filters: {mest: Городское население}, per: ratio, base_code: Y48112027, base_filters: {mest: Все население}}
+    urban_share: {code: Y48112027, filters: {mest: Городское население}, per: ratio, base_code: Y48112027, base_filters: {mest: Все население}, zero_if_missing: true}
     births_per_1000: {code: Y48112003, per: capita, scale: 1000}
     deaths_per_1000: {code: Y48112001, per: capita, scale: 1000}
     retail_pc: {code: Y48401003, filters: {okved2: Всего по обследуемым}, period: Январь-декабрь, per: capita, scale: 1000}
@@ -35,13 +65,13 @@ rosstat:
     housing_m2_pc: {code: Y48008019, filters: {schil: Весь жилищный фонд}, per: capita, scale: 1000}
     agri_pc: {code: Y48007010, filters: {kategor: Хозяйства всех категорий}, per: capita, scale: 1000}
     jobs_per_capita: {code: Y48423005, filters: {okved2: Всего по обследуемым}, per: capita}
-    emp_mining_share: {code: Y48423005, filters: {okved2: Добыча полезных}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
-    emp_manufacturing_share: {code: Y48423005, filters: {okved2: Обрабатывающие}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
-    emp_public_share: {code: Y48423005, filters: {okved2: Государственное управление}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
-    emp_agri_share: {code: Y48423005, filters: {okved2: "Сельское, лесное"}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}}
+    emp_mining_share: {code: Y48423005, filters: {okved2: Добыча полезных}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}, zero_if_missing: true}
+    emp_manufacturing_share: {code: Y48423005, filters: {okved2: Обрабатывающие}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}, zero_if_missing: true}
+    emp_public_share: {code: Y48423005, filters: {okved2: Государственное управление}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}, zero_if_missing: true}
+    emp_agri_share: {code: Y48423005, filters: {okved2: "Сельское, лесное"}, per: ratio, base_code: Y48423005, base_filters: {okved2: Всего по обследуемым}, zero_if_missing: true}
     payroll_pc_month: {code: Y48423006, filters: {okved2: Всего по обследуемым}, period: Январь-декабрь, per: capita, scale: 83.3333}  # ФОТ организаций без МП, руб. на жителя в месяц (тыс. руб. × 1000 / 12)
 
-# Код жюри: скачивается с зафиксированного коммита, в репозиторий не копируется.
+# Сторонний код (KEFRiN, генератор синтетики, метрики Pattern): зафиксированные коммиты репозиториев авторов, в репозиторий не копируется.
 third_party:
   kefrin:
     repo: Sorooshi/KEFRiN
@@ -78,6 +108,7 @@ cluster:
                      emp_public_share, emp_agri_share]
   log_features: [population, salary, market_access, retail_pc, paid_services_pc, invest_pc, housing_m2_pc,
                  jobs_per_capita]
+  impute_k: 10           # пропуск признака — среднее по 10 ближайшим МО (KNNImputer)
   clip_z: 5              # стандартизованные признаки обрезаются на ±clip_z
   kefrin_xi: 2.0         # вес сети в KEFRiN (вес признаков rho = 1); выбран по outputs/cluster/kefrin_xi.csv
   kefrin_n_init: 3
@@ -126,7 +157,7 @@ interpret:
 
 typology:             # xi — по outputs/cluster/kefrin_xi.csv; rule — по outputs/cluster/synthetic_k_accuracy*.csv
   levels: 1
-  k_rule: borda_blocks   # правило выбора K (mopeers.synth.choose)
+  k_rule: borda_blocks_net   # правило выбора K (mopeers.synth.choose): Борда по блокам, ничья — по MQ
   method: kefrin
   rule: fused
   xi: 2.0

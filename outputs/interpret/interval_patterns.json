@@ -1,135 +1,135 @@
 [
  {
   "type":"1",
-  "size":627,
+  "size":590,
   "features":[
    "share_Общественное питание",
    "salary",
-   "spend_month",
-   "share_Маркетплейсы"
+   "share_Маркетплейсы",
+   "share_65plus"
   ],
   "intervals":{
    "share_Общественное питание":[
     0.0042086058,
-    0.0304020409
+    0.0277749646
    ],
    "salary":[
     38635.8,
-    67414.5
-   ],
-   "spend_month":[
-    18369.75,
-    28717.75
+    70038.6
    ],
    "share_Маркетплейсы":[
-    0.161401361,
-    0.2157652915
+    0.1584390596,
+    0.2175651373
+   ],
+   "share_65plus":[
+    0.1597309372,
+    0.2312999843
    ]
   },
-  "extent_size":535,
-  "precision_test":0.6749116608,
-  "recall_test":0.5895061728,
-  "stability":0.9655330321
+  "extent_size":445,
+  "precision_test":0.7258064516,
+  "recall_test":0.5882352941,
+  "stability":0.9481335485
  },
  {
   "type":"2",
-  "size":554,
+  "size":563,
   "features":[
+   "urban_share",
    "emp_manufacturing_share",
-   "share_0_15",
    "spend_month",
    "share_Общественное питание"
   ],
   "intervals":{
+   "urban_share":[
+    0.0,
+    0.5113818796
+   ],
    "emp_manufacturing_share":[
     0.0,
-    0.1276190476
-   ],
-   "share_0_15":[
-    0.1831256568,
-    0.2386582164
+    0.1134020619
    ],
    "spend_month":[
-    19049.8333333333,
-    29350.0833333334
+    18504.5833333333,
+    28120.0833333333
    ],
    "share_Общественное питание":[
-    0.006471421,
-    0.0367583233
+    0.0087692476,
+    0.0351066858
    ]
   },
-  "extent_size":372,
-  "precision_test":0.8279569892,
-  "recall_test":0.5661764706,
-  "stability":0.9644157129
+  "extent_size":546,
+  "precision_test":0.5872483221,
+  "recall_test":0.6294964029,
+  "stability":0.9813582398
  },
  {
   "type":"3",
-  "size":474,
+  "size":469,
   "features":[
    "emp_manufacturing_share",
+   "urban_share",
    "population",
-   "volatility",
-   "retail_pc"
+   "volatility"
   ],
   "intervals":{
    "emp_manufacturing_share":[
     0.0551628106,
-    0.4180848561
+    0.4198658843
+   ],
+   "urban_share":[
+    0.2302557704,
+    1.0
    ],
    "population":[
     19938.0,
-    304713.0
+    288947.0
    ],
    "volatility":[
-    0.0463094913,
-    0.0776721023
-   ],
-   "retail_pc":[
-    69236.7741814288,
-    368754.3893542114
+    0.0489990317,
+    0.0829983825
    ]
   },
-  "extent_size":394,
-  "precision_test":0.6728395062,
-  "recall_test":0.4325396825,
-  "stability":0.9389341603
+  "extent_size":458,
+  "precision_test":0.5876777251,
+  "recall_test":0.5123966942,
+  "stability":0.9362588957
  },
  {
   "type":"4",
-  "size":154,
+  "size":158,
   "features":[
    "market_access",
-   "jobs_per_capita",
    "salary",
-   "emp_mining_share"
+   "invest_pc",
+   "jobs_per_capita"
   ],
   "intervals":{
    "market_access":[
-    116.9,
-    245.1
-   ],
-   "jobs_per_capita":[
-    0.2293197194,
-    1.0661891748
+    113.6,
+    244.4
    ],
    "salary":[
-    93058.4,
+    94966.2,
     203876.7
    ],
-   "emp_mining_share":[
-    0.0,
-    0.3650390823
+   "invest_pc":[
+    79994.5755356659,
+    1766134.660583437
+   ],
+   "jobs_per_capita":[
+    0.2151767152,
+    0.8133120128
    ]
   },
-  "extent_size":105,
-  "precision_test":0.6333333333,
-  "recall_test":0.2794117647,
-  "stability":0.9684031119
+  "extent_size":92,
+  "precision_test":0.6896551724,
+  "recall_test":0.2857142857,
+  "stability":0.9289607609
  },
  {
   "type":"5",
-  "size":259,
+  "size":288,
   "features":[
    "share_Общественное питание",
    "spend_month",
@@ -138,25 +138,25 @@
   ],
   "intervals":{
    "share_Общественное питание":[
-    0.0628384143,
-    0.0880199382
+    0.0601521866,
+    0.0921943848
    ],
    "spend_month":[
-    44665.5,
-    59607.0
+    43346.9166666666,
+    57287.25
    ],
    "share_Продовольствие":[
-    0.2847573956,
-    0.3437610469
+    0.2866333783,
+    0.34560565
    ],
    "market_access":[
-    390.1,
-    650.8
+    370.5,
+    649.8
    ]
   },
-  "extent_size":139,
+  "extent_size":167,
   "precision_test":1.0,
-  "recall_test":0.5254237288,
-  "stability":0.9212243005
+  "recall_test":0.5217391304,
+  "stability":0.9409090098
  }
 ]
