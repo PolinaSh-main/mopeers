@@ -108,8 +108,21 @@ def collect(cfg):
         a = nt.loc["любое экономическое событие"]
         news = {"n_titles": len(nn), "n_mo": int(nn.territory_id.nunique()), "div": _r(a.share_divergent, 3),
                 "ctrl": _r(a.share_control, 3), "p": _r(a.p_value, 3)}
+    ext = None
+    if (out / "interpret" / "sme_by_type.csv").exists() and (out / "interpret" / "nightlights_by_type.csv").exists():
+        by = pd.read_csv(out / "interpret" / "sme_by_type.csv", dtype={"type": str}).merge(
+            pd.read_csv(out / "interpret" / "nightlights_by_type.csv", dtype={"type": str}), on="type")
+        smt = pd.read_csv(out / "interpret" / "sme_test.csv").set_index(["x", "y"])
+        nlt = pd.read_csv(out / "interpret" / "nightlights_test.csv").set_index("test")
+        ext = {"by_type": by.round(4).to_dict("records"),
+               "sme_spend": _r(smt.loc[("sme_emp_pc", "spend"), "spearman"], 3),
+               "ie_spend": _r(smt.loc[("ie_per_1000", "spend"), "spearman"], 3),
+               "sme_ratio": _r(smt.loc[("sme_emp_pc", "spend_to_payroll"), "spearman"], 3),
+               "light_spend": _r(nlt.spearman.iloc[0], 3), "light_growth": _r(nlt.spearman.iloc[-2], 3),
+               "light_flag_p": _r(nlt.p_value.iloc[-1], 3)}
     method = {
         "news": news,
+        "ext": ext,
         "mobility": {"by_type": mob.round(3).to_dict("records"), "test": {k: _r(v, 6) for k, v in mobt.items()}},
         "stability": stab,
         "rules": net.round(4).to_dict("records"),

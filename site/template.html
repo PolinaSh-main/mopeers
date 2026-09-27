@@ -311,6 +311,8 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
   <h3 style="margin-top:32px">6. Внешняя проверка</h3>
   <p class="muted small" id="mobNote"></p>
   <div class="tablewrap"><table id="mobTable"></table></div>
+  <p class="muted small" id="extNote" style="margin-top:12px"></p>
+  <div class="tablewrap"><table id="extTable"></table></div>
   <p class="muted small" id="newsNote" style="margin-top:12px"></p>
   <p class="small muted" style="margin-top:12px">Полное описание — в методологическом отчёте, код и конфигурации — в репозитории.</p>
 </div></section>
@@ -429,23 +431,34 @@ function bubbleNote() {
 }
 function drawBubbles() {
   const el = document.getElementById('bubbleSvg');
-  const w = Math.max(320, el.clientWidth || 960), narrow = w < 700, gap = narrow ? 18 : 22, labH = 44;
+  const w = Math.max(320, el.clientWidth || 960), narrow = w < 700, gap = narrow ? 18 : 22, labH = 56;
   // население неизвестно у части МО (например, районов Москвы) — берётся медиана типа
   const groups = TYPES.map(t => {
     const ms = MO.filter(d => d.t === t), med = d3.median(ms, d => d.pop) || 1;
     return {t, leaves: ms.map(d => ({d, v: d.pop || med}))};
   });
-  groups.forEach(g => g.total = d3.sum(g.leaves, x => x.v));
-  // площадь кластера пропорциональна населению типа; в ряд на широком экране, по два в ряд на узком
+  // подпись — в две строки примерно равной длины; ширина строк измеряется шрифтом подписи
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `700 14px ${getComputedStyle(document.documentElement).getPropertyValue('--serif')}`;
+  groups.forEach(g => {
+    g.total = d3.sum(g.leaves, x => x.v);
+    const words = T[g.t].name.split(' ');
+    const cuts = d3.range(1, words.length).map(i => [words.slice(0, i).join(' '), words.slice(i).join(' ')]);
+    g.lines = cuts.length ? d3.least(cuts, c => d3.max(c, l => ctx.measureText(l).width)) : [T[g.t].name];
+    g.lw = d3.max(g.lines, l => ctx.measureText(l).width) + 8;
+  });
+  // площадь кластера пропорциональна населению типа; в ряд на широком экране, по два в ряд на узком.
+  // Каждый кластер занимает место по ширине круга или подписи — что больше, поэтому подписи не наезжают
   const perRow = narrow ? 2 : groups.length, rows = d3.range(Math.ceil(groups.length / perRow)).map(i => groups.slice(i * perRow, (i + 1) * perRow));
-  const k = d3.min(rows, r => (w - gap * (r.length - 1)) / d3.sum(r, g => 2 * Math.sqrt(g.total)));
+  const slot = (g, k) => Math.max(2 * Math.sqrt(g.total) * k, g.lw), rowW = (r, k) => d3.sum(r, g => slot(g, k)) + gap * (r.length - 1);
+  let k = d3.min(rows, r => (w - gap * (r.length - 1)) / d3.sum(r, g => 2 * Math.sqrt(g.total)));
+  while (d3.max(rows, r => rowW(r, k)) > w) k *= 0.98;
   let y0 = 0;
   for (const r of rows) {
     const rmax = d3.max(r, g => Math.sqrt(g.total) * k);
-    const used = d3.sum(r, g => 2 * Math.sqrt(g.total) * k) + gap * (r.length - 1);
-    let x0 = (w - used) / 2;
+    let x0 = (w - rowW(r, k)) / 2;
     for (const g of r) {
-      g.r = Math.sqrt(g.total) * k; g.cx = x0 + g.r; g.cy = y0 + rmax; x0 += 2 * g.r + gap;
+      g.r = Math.sqrt(g.total) * k; g.cx = x0 + slot(g, k) / 2; g.cy = y0 + rmax; x0 += slot(g, k) + gap;
       const root = d3.hierarchy({children: g.leaves}).sum(x => x.v || 0);
       d3.pack().size([2 * g.r, 2 * g.r]).padding(0.5)(root);
       g.nodes = root.leaves().map(n => ({...n.data.d, x: g.cx - g.r + n.x, y: g.cy - g.r + n.y, rr: n.r}));
@@ -462,12 +475,14 @@ function drawBubbles() {
     .on('mousemove', (ev, d) => showTip(ev, moTip(d.id))).on('mouseleave', hideTip)
     .on('click', (ev, d) => select(d.id, true));
   for (const g of groups) {
-    const words = T[g.t].name.split(' '), half = Math.ceil(words.length / 2);
-    const lines = words.length > 2 ? [words.slice(0, half).join(' '), words.slice(half).join(' ')] : [T[g.t].name];
+    const lines = g.lines;
     const tx = svg.append('text').attr('class', 'tl').attr('x', g.cx).attr('y', g.cy + g.r + 18);
     lines.forEach((l, i) => tx.append('tspan').attr('x', g.cx).attr('dy', i ? 16 : 0).text(l));
-    svg.append('text').attr('class', 'tn').attr('x', g.cx).attr('y', g.cy + g.r + 18 + 16 * lines.length)
+    const tn = svg.append('text').attr('class', 'tn').attr('x', g.cx).attr('y', g.cy + g.r + 18 + 16 * lines.length)
       .text(fmt.format(g.leaves.length) + ' МО');
+    // подпись шире кластера у края сдвигается внутрь рисунка
+    const hw = d3.max([tx, tn], t => t.node().getBBox().width) / 2 + 4, x = Math.min(w - hw, Math.max(hw, g.cx));
+    tx.attr('x', x).selectAll('tspan').attr('x', x); tn.attr('x', x);
   }
   document.getElementById('bubbleNote').textContent = bubbleNote();
 }
@@ -815,13 +830,20 @@ function drawChecks() {
   document.getElementById('mobTable').innerHTML = '<tr><th>Тип</th><th class="num">МО в СЗФО</th><th class="num">Мобильность, км</th></tr>' +
     mb.by_type.map(r => `<tr><td><i class="dot" style="background:${tColor(r.type)}"></i> ${esc(T[r.type].name)}</td><td class="num">${r.count}</td><td class="num">${r.mobility_km.toFixed(2).replace('.', ',')}</td></tr>`).join('');
 }
+function drawExt() {
+  const e = METH.ext; if (!e) return;
+  const r2 = v => v.toFixed(2).replace('.', ','), ref = e.by_type.find(r => r.type === '5').light_pc;
+  document.getElementById('extNote').textContent = `Реестр субъектов малого и среднего предпринимательства ФНС (данные на 2023 год) сопоставлен с муниципалитетами по координатам. Траты жителя выше там, где больше занятых в малом бизнесе (коэффициент Спирмена ${r2(e.sme_spend)}) и больше индивидуальных предпринимателей (${r2(e.ie_spend)}): карточные данные согласуются с независимым реестром. Разрыв между тратами и местными зарплатами малым бизнесом не объясняется: связь с отношением трат к фонду оплаты труда обратная (${r2(e.sme_ratio)}). Ночная освещённость со спутника (VIIRS, 2024 год) с тратами жителя почти не связана (${r2(e.light_spend)}), её рост — с ростом трат тоже (${r2(e.light_growth)}); на уровне МО свет отражает промышленность и плотность застройки: больше всего света на жителя — в ресурсных территориях. В таблице — медианы по типам; свет на жителя дан в долях от мегаполисов.`;
+  document.getElementById('extTable').innerHTML = '<tr><th>Тип</th><th class="num">Занятых в МСП на 100 жит.</th><th class="num">ИП на 1000 жит.</th><th class="num">Свет на жителя</th></tr>' +
+    e.by_type.map(r => `<tr><td><i class="dot" style="background:${tColor(r.type)}"></i> ${esc(T[r.type].name)}</td><td class="num">${(r.sme_emp_pc * 100).toFixed(1).replace('.', ',')}</td><td class="num">${Math.round(r.ie_per_1000)}</td><td class="num">${(r.light_pc / ref).toFixed(1).replace('.', ',')}</td></tr>`).join('');
+}
 function drawNews() {
   const n = METH.news; if (!n) return;
   const pc = v => Math.round(v * 100) + '%';
   document.getElementById('newsNote').textContent = `Проверка флага расхождения новостями. Для 167 МО с флагом и 167 МО без флага того же типа собраны заголовки 2024 года, где названо само МО (${fmt.format(n.n_titles)} заголовков по ${n.n_mo} МО), и размечены открытой моделью GigaChat 3.1: затрагивает ли событие экономику МО. Экономические события нашлись у ${pc(n.div)} МО с флагом и у ${pc(n.ctrl)} МО без флага (p = ${n.p.toFixed(2).replace('.', ',')}): связь не обнаружена. У типичного МО 2–3 заголовка за год, поэтому такая проверка заметила бы только сильную связь; следующий шаг — местные источники новостей.`;
 }
-function redrawAll() { drawBubbles(); drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); if (current) select(current.id, false); }
-drawBubbles(); drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); drawNews(); newRound();
+function redrawAll() { drawBubbles(); drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); drawExt(); if (current) select(current.id, false); }
+drawBubbles(); drawTypes(); drawChange(); drawHidden(); drawMethod(); drawChecks(); drawExt(); drawNews(); newRound();
 const start = +params.get('mo') || (MO.find(d => d.n === 'Комсомольск-на-Амуре') || MO[0]).id;
 select(start, false);
 </script>

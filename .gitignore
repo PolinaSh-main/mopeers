@@ -8,7 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
-data/raw/
+data/raw/*
 competitors/
 third_party/
 outputs/cache/
@@ -31,3 +31,5 @@ STATE.md
 data/telegram.txt
 docs/
 kaggle/build/
+!data/raw/monotowns.csv
+!data/raw/moex_2024.csv

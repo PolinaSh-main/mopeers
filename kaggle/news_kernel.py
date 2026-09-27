@@ -116,7 +116,7 @@ def label(model, name, region, titles):
               f"из списка и укажи признак economy.\n{RULES}\nКатегории:\n{cat_list}\n\nЗаголовки:\n" +
               "\n".join(f"{j}. {t}" for j, t in enumerate(titles)))
     body = {"model": model, "messages": [{"role": "user", "content": prompt}], "format": schema, "stream": False,
-            "think": False, "options": {"temperature": 0, "num_ctx": 8192, "num_predict": 100 * len(titles) + 50}}
+            "think": False, "options": {"temperature": 0, "num_ctx": 8192, "num_predict": 200 * len(titles) + 100}}
     try:
         req = urllib.request.Request("http://127.0.0.1:11434/api/chat", json.dumps(body).encode(),
                                      {"Content-Type": "application/json"})

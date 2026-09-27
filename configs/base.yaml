@@ -167,7 +167,7 @@ typology:             # xi — по outputs/cluster/kefrin_xi.csv; rule — по
   n_boot: 20           # подвыборок для проверки устойчивости
   boot_share: 0.8
 
-news:                 # новостной слой: разметка на Kaggle (GPU), модель GigaChat 3.1 10B-A1.8B, MIT
+news:                 # новостной слой: разметка на Kaggle (GPU) моделями Qwen3.5-35B-A3B и GigaChat 3.1 (kaggle/news_kernel.py)
   kaggle_user: pasheviakova
   kernel_slug: mopeers-news
   categories: [закрытие или сокращение производства, открытие или расширение производства, стройка и инфраструктура,
