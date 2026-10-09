@@ -35,7 +35,7 @@ def build_catalog(cfg=None):
         else:
             continue
         rows += rows_section
-        pd.DataFrame(rows).to_csv(out, index=False)
+        pd.DataFrame(rows).to_csv(out, index=False, lineterminator="\n")
         print("раздел", section, "показателей", len(rows_section))
     return pd.DataFrame(rows)
 

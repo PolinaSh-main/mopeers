@@ -65,10 +65,10 @@ def build(cfg=None):
         m = labels[[a_, b_]].dropna()
         steps.append(pd.crosstab(m[a_], m[b_]).reindex(index=names, columns=names, fill_value=0))
     step_total = sum(steps)
-    step_total.to_csv(out / "transitions_monthly.csv")
+    step_total.to_csv(out / "transitions_monthly.csv", lineterminator="\n")
     fl = labels[[ends[0], ends[-1]]].dropna()
     pd.crosstab(fl[ends[0]], fl[ends[-1]]).reindex(index=names, columns=names, fill_value=0) \
-        .to_csv(out / "transitions_first_last.csv")
+        .to_csv(out / "transitions_first_last.csv", lineterminator="\n")
 
     t = np.arange(len(ends))
     slope = own_dist[ends].apply(
@@ -78,7 +78,7 @@ def build(cfg=None):
                           "type_first": labels[ends[0]], "drift_slope": slope})
     flags["moved"] = flags.type_first.notna() & flags.type_nearest_last.notna() &         (flags.type_first != flags.type_nearest_last)
     agree = flags.dropna(subset=["type", "type_nearest_last"])
-    pd.Series({"agreement": float((agree.type == agree.type_nearest_last).mean()), "n": len(agree)})         .to_csv(out / "agreement_reference.csv")
+    pd.Series({"agreement": float((agree.type == agree.type_nearest_last).mean()), "n": len(agree)})         .to_csv(out / "agreement_reference.csv", lineterminator="\n")
     flags["drifting"] = flags.drift_slope > flags.drift_slope.quantile(dc["drift_quantile"])
     flags["divergence"] = flags.moved | flags.drifting
     flags.to_parquet(out / "divergence.parquet")

@@ -63,7 +63,7 @@ def build(cfg=None):
     d["spend_month"] = pd.Series({t: r["spend_month"] for t, r in rec.items()})
     d["growth_2024"] = pd.Series({t: r["growth_2024"] for t, r in rec.items()})
     d["divergence"] = flags.divergence.reindex(d.index).fillna(False).astype(bool)
-    d.to_csv(out / "interpret" / "nightlights.csv")
+    d.to_csv(out / "interpret" / "nightlights.csv", lineterminator="\n")
 
     rows = []
     ok = d.dropna(subset=["light_pc", "spend_month"])
@@ -82,7 +82,7 @@ def build(cfg=None):
     rows.append({"test": "рост света: МО с флагом расхождения против остальных (Манна — Уитни)", "n": len(a),
                  "median_flag": a.median(), "median_rest": b.median(), "p_value": mannwhitneyu(a, b).pvalue})
     t = pd.DataFrame(rows)
-    t.to_csv(out / "interpret" / "nightlights_test.csv", index=False)
-    d.groupby("type")[["light_pc", "light_growth_2024"]].median().to_csv(out / "interpret" / "nightlights_by_type.csv")
+    t.to_csv(out / "interpret" / "nightlights_test.csv", index=False, lineterminator="\n")
+    d.groupby("type")[["light_pc", "light_growth_2024"]].median().to_csv(out / "interpret" / "nightlights_by_type.csv", lineterminator="\n")
     print(t.round(3).to_string())
     return t

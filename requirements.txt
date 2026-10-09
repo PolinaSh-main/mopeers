@@ -5,18 +5,10 @@ affine==3.0.1
     # via
     #   rasterio
     #   rasterstats
-annotated-types==0.8.0
-    # via pydantic
 attrs==26.1.0
     # via
     #   affine
     #   rasterio
-bitarray==3.11.0
-    # via
-    #   caspailleur
-    #   fcapy
-caspailleur==0.2.2
-    # via fcapy
 certifi==2026.7.22
     # via
     #   pyogrio
@@ -34,32 +26,20 @@ cligj==0.7.2
     # via rasterstats
 cloudpickle==3.1.2
     # via joblib
-colorama==0.4.6 ; sys_platform == 'win32'
-    # via tqdm
 contourpy==1.4.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-dataclasses==0.8
-    # via scikit-mine
-deprecation==2.1.0
-    # via caspailleur
 duckdb==1.5.5
     # via mopeers
 et-xmlfile==2.0.0
     # via openpyxl
-fcapy==0.1.4.5
-    # via mopeers
 fonttools==4.66.0
     # via matplotlib
 formulaic==1.2.2
     # via statsmodels
-frozendict==2.4.7
-    # via fcapy
 geopandas==1.1.4
     # via mopeers
-graphviz==0.21
-    # via scikit-mine
 idna==3.20
     # via requests
 igraph==1.0.0
@@ -70,9 +50,7 @@ interface-meta==2.0.1
     # via formulaic
 joblib==1.6.0
     # via
-    #   fcapy
     #   scikit-learn
-    #   scikit-mine
     #   tslearn
 kiwisolver==1.5.1
     # via matplotlib
@@ -82,26 +60,19 @@ llvmlite==0.49.0
     # via numba
 matplotlib==3.11.2
     # via
-    #   fcapy
     #   mopeers
-    #   scikit-mine
     #   seaborn
 narwhals==2.26.0
     # via
     #   formulaic
     #   scikit-learn
 networkx==3.7
-    # via
-    #   fcapy
-    #   mopeers
-    #   scikit-mine
+    # via mopeers
 numba==0.67.0
     # via tslearn
 numpy==2.5.3
     # via
-    #   caspailleur
     #   contourpy
-    #   fcapy
     #   formulaic
     #   geopandas
     #   matplotlib
@@ -123,7 +94,6 @@ openpyxl==3.1.5
     # via mopeers
 packaging==26.3
     # via
-    #   deprecation
     #   geopandas
     #   matplotlib
     #   patsy
@@ -131,11 +101,9 @@ packaging==26.3
     #   statsmodels
 pandas==3.0.6
     # via
-    #   fcapy
     #   formulaic
     #   geopandas
     #   mopeers
-    #   scikit-mine
     #   seaborn
     #   statsmodels
 patsy==1.0.3
@@ -144,12 +112,6 @@ pillow==12.3.0
     # via matplotlib
 pyarrow==25.0.1
     # via mopeers
-pydantic==2.13.5
-    # via fcapy
-pydantic-core==2.46.5
-    # via pydantic
-pydot==4.0.1
-    # via scikit-mine
 pyogrio==0.13.0
     # via
     #   geopandas
@@ -158,12 +120,9 @@ pyogrio==0.13.0
 pyparsing==3.3.3
     # via
     #   matplotlib
-    #   pydot
     #   rasterio
 pyproj==3.8.0
     # via geopandas
-pyroaring==1.1.0
-    # via scikit-mine
 python-dateutil==2.9.0.post0
     # via
     #   matplotlib
@@ -171,9 +130,7 @@ python-dateutil==2.9.0.post0
 python-igraph==1.0.0
     # via mopeers
 pyyaml==6.0.3
-    # via
-    #   caspailleur
-    #   mopeers
+    # via mopeers
 rasterio==1.5.1
     # via rasterstats
 rasterstats==0.21.0
@@ -186,21 +143,14 @@ s-dbw==0.4.0
     # via mopeers
 scikit-learn==1.9.1
     # via
-    #   fcapy
     #   mopeers
-    #   scikit-mine
     #   tslearn
-scikit-mine==1.0.0
-    # via
-    #   caspailleur
-    #   fcapy
 scipy==1.18.1
     # via
     #   formulaic
     #   mopeers
     #   s-dbw
     #   scikit-learn
-    #   scikit-mine
     #   statsmodels
     #   tslearn
 seaborn==0.13.2
@@ -213,8 +163,6 @@ simplejson==4.1.2
     # via rasterstats
 six==1.17.0
     # via python-dateutil
-sortedcontainers==2.4.0
-    # via scikit-mine
 statsmodels==0.15.0
     # via
     #   mopeers
@@ -223,25 +171,13 @@ texttable==1.7.0
     # via igraph
 threadpoolctl==3.7.0
     # via scikit-learn
-tqdm==4.70.1
-    # via
-    #   caspailleur
-    #   fcapy
 tslearn==0.9.0
     # via mopeers
 typing-extensions==4.16.0
-    # via
-    #   formulaic
-    #   pydantic
-    #   pydantic-core
-    #   typing-inspection
-typing-inspection==0.4.4
-    # via pydantic
+    # via formulaic
 tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'
     # via pandas
 urllib3==2.8.0
     # via requests
-wget==3.2
-    # via scikit-mine
 wrapt==2.4.1
     # via formulaic

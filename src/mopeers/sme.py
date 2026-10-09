@@ -59,7 +59,7 @@ def build(cfg=None):
     d["sme_emp_growth"] = sme.emp_2023.reindex(d.index) / sme.emp_2022.reindex(d.index) - 1
     d["spend"] = np.exp(f.log_spend.reindex(d.index))
     d["spend_to_payroll"] = d.spend / ctx.payroll_pc_month.reindex(d.index)
-    d.to_csv(out / "interpret" / "sme.csv")
+    d.to_csv(out / "interpret" / "sme.csv", lineterminator="\n")
     rows = []
     for x, y in [("sme_emp_pc", "spend_to_payroll"), ("ie_per_1000", "spend_to_payroll"),
                  ("sme_emp_pc", "spend"), ("ie_per_1000", "spend")]:
@@ -69,8 +69,8 @@ def build(cfg=None):
         rows.append({"x": x, "y": y, "n": len(ok), "spearman": r.statistic, "p_value": r.pvalue,
                      "spearman_within_type_median": within})
     t = pd.DataFrame(rows)
-    t.to_csv(out / "interpret" / "sme_test.csv", index=False)
+    t.to_csv(out / "interpret" / "sme_test.csv", index=False, lineterminator="\n")
     d.groupby("type")[["sme_emp_pc", "ie_per_1000", "sme_emp_growth", "spend_to_payroll"]].median().to_csv(
-        out / "interpret" / "sme_by_type.csv")
+        out / "interpret" / "sme_by_type.csv", lineterminator="\n")
     print(t.round(3).to_string())
     return t

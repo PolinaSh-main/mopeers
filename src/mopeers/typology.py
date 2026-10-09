@@ -76,13 +76,13 @@ def build(cfg=None, end=None):
     out.mkdir(parents=True, exist_ok=True)
     res = pd.DataFrame({"territory_id": ids, "macro": lab1 + 1, "type": codes}).set_index("territory_id")
     res.to_parquet(out / "types.parquet")
-    t1.to_csv(out / "icvi_macro.csv")
+    t1.to_csv(out / "icvi_macro.csv", lineterminator="\n")
     if level2:
-        pd.concat(level2).to_csv(out / "icvi_sub.csv")
+        pd.concat(level2).to_csv(out / "icvi_sub.csv", lineterminator="\n")
     # индексы качества итогового разбиения на подтипы
     final = pd.Series(pd.factorize(res.type)[0], index=ids)
     q = icvi(x, a, final.to_numpy())
-    pd.Series(q).to_csv(out / "icvi_final.csv")
+    pd.Series(q).to_csv(out / "icvi_final.csv", lineterminator="\n")
     centers = xdf.groupby(res.type.to_numpy()).mean()
     centers.to_parquet(out / "centers.parquet")
     print("итоговых типов:", res.type.nunique(), "| ICVI:", {k: round(float(v), 3) for k, v in q.items()})
@@ -133,6 +133,6 @@ def stability(cfg=None):
                      "ari_types": adjusted_rand_score(ref.type.to_numpy()[idx], codes)})
         print(rows[-1], flush=True)
     t = pd.DataFrame(rows)
-    t.to_csv(path(cfg, "outputs") / "typology" / "stability.csv", index=False)
+    t.to_csv(path(cfg, "outputs") / "typology" / "stability.csv", index=False, lineterminator="\n")
     print(t[["ari_macro", "ari_types"]].describe().round(3).to_string())
     return t

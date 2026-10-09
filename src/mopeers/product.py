@@ -106,7 +106,7 @@ def build(cfg=None):
         "local_peers": ";".join(map(str, r["local_peers"])),
         "experience_leaders": ";".join(str(e["territory_id"]) for e in r["experience"]),
         **{f"rank_{m}": r["potential"][m]["rank"] for m in key}} for r in records])
-    flat.to_csv(out / "mo_peers.csv", index=False, encoding="utf-8")
+    flat.to_csv(out / "mo_peers.csv", index=False, encoding="utf-8", lineterminator="\n")
     flat.to_parquet(out / "mo_peers.parquet")
     print("МО в датасете", len(flat), "| с флагом расхождения", int(flat.divergence.sum()))
     return flat
@@ -171,6 +171,6 @@ def thesis_check(cfg=None):
             changed += above_reg != above_peer
         rows.append({"metric": m, "n": n, "share_changed": changed / n})
     t = pd.DataFrame(rows)
-    t.to_csv(path(cfg, "outputs") / "dataset" / "thesis_check.csv", index=False)
+    t.to_csv(path(cfg, "outputs") / "dataset" / "thesis_check.csv", index=False, lineterminator="\n")
     print(t.round(3).to_string())
     return t

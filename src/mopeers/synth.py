@@ -102,16 +102,16 @@ def run(cfg=None, tag=""):
     out = pd.DataFrame(rows)
     d = path(cfg, "outputs") / "cluster"
     d.mkdir(parents=True, exist_ok=True)
-    out.to_csv(d / f"synthetic_k_choice{tag}.csv", index=False)
-    pd.concat(tables).to_csv(d / f"synthetic_icvi{tag}.csv", index=False)
+    out.to_csv(d / f"synthetic_k_choice{tag}.csv", index=False, lineterminator="\n")
+    pd.concat(tables).to_csv(d / f"synthetic_icvi{tag}.csv", index=False, lineterminator="\n")
     cols = list(HIGHER_BETTER) + RULES
     hit = pd.DataFrame({c: out.groupby("edges").apply(lambda g: (g[c] == g.k_true).mean()) for c in cols}).T
     hit["all"] = [(out[c] == out.k_true).mean() for c in cols]
-    hit.to_csv(d / f"synthetic_k_accuracy{tag}.csv")
+    hit.to_csv(d / f"synthetic_k_accuracy{tag}.csv", lineterminator="\n")
     meth = pd.DataFrame(meth_rows)
-    meth.to_csv(d / f"synthetic_methods_ari{tag}.csv", index=False)
+    meth.to_csv(d / f"synthetic_methods_ari{tag}.csv", index=False, lineterminator="\n")
     ms = meth.groupby(["method", "edges"]).ari.agg(["mean", "std"]).unstack()
-    ms.to_csv(d / f"synthetic_methods_ari_summary{tag}.csv")
+    ms.to_csv(d / f"synthetic_methods_ari_summary{tag}.csv", lineterminator="\n")
     print("доля наборов с истинным K:\n", hit.round(2).to_string())
     print("ARI с истинным разбиением:\n", ms.round(3).to_string())
     return out
@@ -144,7 +144,7 @@ def null_structure(cfg=None, end=None):
         rows.append({"k": k, "SW": real[0], "SW_null_mean": nulls[:, 0].mean(), "SW_null_max": nulls[:, 0].max(),
                      "CH": real[1], "CH_null_mean": nulls[:, 1].mean(), "CH_null_max": nulls[:, 1].max()})
     t = pd.DataFrame(rows)
-    t.to_csv(path(cfg, "outputs") / "cluster" / "null_structure.csv", index=False)
+    t.to_csv(path(cfg, "outputs") / "cluster" / "null_structure.csv", index=False, lineterminator="\n")
     print(t.round(3).to_string())
     return t
 

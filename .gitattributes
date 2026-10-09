@@ -1,0 +1,4 @@
+# Результаты и данные хранятся побайтно: контрольные суммы outputs/SHA256SUMS не зависят от ОС
+outputs/** -text
+data/** -text
+site/index.html -text

@@ -158,7 +158,7 @@ def experiment(cfg=None, end=None):
                 print(rule, method, k, {m: round(v, 3) for m, v in row.items() if m in HIGHER_BETTER})
     t = pd.DataFrame(rows)
     t["mean_rank"] = rank_score(t)
-    t.to_csv(out / "icvi_grid.csv", index=False)
+    t.to_csv(out / "icvi_grid.csv", index=False, lineterminator="\n")
     pd.DataFrame(labels_store, index=ids).to_parquet(out / "labels_grid.parquet")
     print(t.sort_values("mean_rank").head(15).round(3).to_string())
     return t
@@ -190,7 +190,7 @@ def xi_sweep(cfg=None, end=None):
     t = pd.DataFrame(rows)
     out = path(cfg, "outputs") / "cluster"
     out.mkdir(parents=True, exist_ok=True)
-    t.to_csv(out / "kefrin_xi.csv", index=False)
+    t.to_csv(out / "kefrin_xi.csv", index=False, lineterminator="\n")
     return t
 
 
@@ -224,8 +224,8 @@ def methods_seeds(cfg=None, end=None):
             rows.append({"method": method, "seed": seed, "k": len(set(lab)), **icvi(x, a, lab)})
         print(method, "готово", flush=True)
     t = pd.DataFrame(rows)
-    t.to_csv(path(cfg, "outputs") / "cluster" / "methods_seeds.csv", index=False)
+    t.to_csv(path(cfg, "outputs") / "cluster" / "methods_seeds.csv", index=False, lineterminator="\n")
     s = t.groupby("method")[list(HIGHER_BETTER)].agg(["mean", "std"])
-    s.to_csv(path(cfg, "outputs") / "cluster" / "methods_seeds_summary.csv")
+    s.to_csv(path(cfg, "outputs") / "cluster" / "methods_seeds_summary.csv", lineterminator="\n")
     print(s.round(3).to_string())
     return t

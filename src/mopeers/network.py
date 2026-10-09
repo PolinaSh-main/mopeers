@@ -147,8 +147,8 @@ def compare(cfg=None, end=None):
     ari = pd.DataFrame({r: {s: adjusted_rand_score(parts[r], parts[s]) for s in parts} for r in parts})
     out = path(cfg, "outputs") / "network"
     out.mkdir(parents=True, exist_ok=True)
-    res.to_csv(out / "rules_comparison.csv")
-    ari.to_csv(out / "rules_ari.csv")
+    res.to_csv(out / "rules_comparison.csv", lineterminator="\n")
+    ari.to_csv(out / "rules_ari.csv", lineterminator="\n")
     print(res.round(3).to_string())
     print("ARI разбиений Leiden между правилами:")
     print(ari.round(2).to_string())

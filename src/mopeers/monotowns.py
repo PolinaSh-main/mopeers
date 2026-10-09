@@ -51,7 +51,7 @@ def fetch(cfg=None):
                          "group": GROUPS.get(color.group(1).upper()) if color else None})
     df = pd.DataFrame(rows)
     out = path(cfg, "raw") / "monotowns.csv"
-    df.to_csv(out, index=False)
+    df.to_csv(out, index=False, lineterminator="\n")
     print("моногородов:", len(df), "| по группам:", df.group.value_counts(dropna=False).to_dict())
     return df
 
@@ -114,7 +114,7 @@ def stock_returns(cfg=None):
         rows.append({"ticker": ticker, "close_first": first, "close_last": data[-1][1],
                      "return_2024": data[-1][1] / first - 1, "days": len(data)})
     df = pd.DataFrame(rows)
-    df.to_csv(path(cfg, "raw") / "moex_2024.csv", index=False)
+    df.to_csv(path(cfg, "raw") / "moex_2024.csv", index=False, lineterminator="\n")
     return df
 
 
@@ -144,8 +144,8 @@ def build(cfg=None):
     ret = pd.read_csv(raw / "moex_2024.csv").set_index("ticker").return_2024
     m["stock_return_2024"] = m.ticker.map(ret)
     dest = out / "interpret"
-    m.to_csv(dest / "monotowns.csv", index=False)
-    pd.crosstab(m.group, m.type, margins=True).to_csv(dest / "monotowns_by_type.csv")
+    m.to_csv(dest / "monotowns.csv", index=False, lineterminator="\n")
+    pd.crosstab(m.group, m.type, margins=True).to_csv(dest / "monotowns_by_type.csv", lineterminator="\n")
     g = m.dropna(subset=["group"])
     tests = []
     for col in ["growth_2024", "rank_growth_2024", "rank_spend_month"]:
@@ -156,7 +156,7 @@ def build(cfg=None):
     tests.append({"metric": "divergence", "test": "хи-квадрат", "p_value": chi2_contingency(ct)[1],
                   **{f"median: {k}": x.divergence.astype(bool).mean() for k, x in g.groupby("group")}})
     t = pd.DataFrame(tests)
-    t.to_csv(dest / "monotowns_test.csv", index=False)
+    t.to_csv(dest / "monotowns_test.csv", index=False, lineterminator="\n")
     print("моногородов сопоставлено с МО:", len(m), "| с акциями:", m.ticker.notna().sum())
     print(t.round(3).to_string())
     return t

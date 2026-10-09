@@ -57,6 +57,8 @@ header.top .wrap{display:flex;align-items:center;gap:18px;height:56px}
 nav.links{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;font-size:12px;text-transform:uppercase;letter-spacing:.07em}
 nav.links a{text-decoration:none;color:var(--ink-2);white-space:nowrap}
 nav.links a:hover{color:var(--ink)}
+.doclinks{display:flex;flex-wrap:wrap;gap:6px 18px;margin:-4px 0 18px;font-size:14px}
+.doclinks a{color:var(--ink);text-underline-offset:3px}
 .theme-btn{margin-left:auto;background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:0;padding:4px 10px;font:inherit;font-size:11px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
 .hero{padding:48px 0 40px;border-top:0}
 .bubbles{position:relative;margin:28px 0 6px}
@@ -164,6 +166,7 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
 <section class="hero hide-embed"><div class="wrap">
   <h1>С кем на самом деле сравнивать ваш муниципалитет</h1>
   <p class="lead">Среднее по региону или по стране мало говорит о конкретной территории. Для каждого из <b id="nMo"></b> муниципалитетов мы нашли 15 экономически сопоставимых: по тому, на что тратят деньги жители (СберИндекс), по доходам, занятости, демографии и доступности рынков (Росстат, СберИндекс). Карточка любого муниципалитета отвечает на три вопроса: где его потенциал, у кого учиться и не уходит ли он от своего типа.</p>
+  <p class="doclinks"><a href="https://github.com/PolinaSh-main/mopeers">Код и данные на GitHub</a><a href="https://github.com/PolinaSh-main/mopeers/blob/master/report/methodology.pdf">Методологический отчёт, PDF</a><a href="https://raw.githubusercontent.com/PolinaSh-main/mopeers/master/outputs/dataset/mo_peers.csv">Датасет, CSV</a></p>
   <div class="search">
     <input id="q" type="search" placeholder="Название муниципалитета, например Братск" autocomplete="off" aria-label="Поиск муниципалитета">
     <div class="suggest" id="suggest" role="listbox"></div>
@@ -314,23 +317,23 @@ footer{padding:40px 0 60px;border-top:1px solid var(--line);font-size:14px;color
   <p class="muted small" id="extNote" style="margin-top:12px"></p>
   <div class="tablewrap"><table id="extTable"></table></div>
   <p class="muted small" id="newsNote" style="margin-top:12px"></p>
-  <p class="small muted" style="margin-top:12px">Полное описание — в методологическом отчёте, код и конфигурации — в репозитории.</p>
+  <p class="small muted" style="margin-top:12px">Полное описание — в <a href="https://github.com/PolinaSh-main/mopeers/blob/master/report/methodology.md">методологическом отчёте</a> (<a href="https://github.com/PolinaSh-main/mopeers/blob/master/report/methodology.pdf">PDF</a>), код и конфигурации — в <a href="https://github.com/PolinaSh-main/mopeers">репозитории</a>.</p>
 </div></section>
 
 <section id="data" class="hide-embed"><div class="wrap">
   <h2>Данные и API</h2>
   <p class="muted">Результаты опубликованы как открытый датасет в формате Портала открытых данных СберИндекса: ключ — <code>territory_id</code> из справочника муниципалитетов СберИндекса. Таблица пересчитывается одной командой, когда выходит новый месяц данных.</p>
   <ul>
-    <li><code>outputs/dataset/mo_peers.csv</code> — тип, флаг расхождения, 15 сопоставимых, 5 сопоставимых в радиусе <span class="rkm"></span> км, лидеры роста, ранги.</li>
-    <li><code>outputs/dataset/api/&lt;territory_id&gt;.json</code> — полная карточка муниципалитета.</li>
-    <li><code>outputs/typology/types.parquet</code> — типы; <code>outputs/dynamics/labels_by_window.parquet</code> — типы по 12 окнам.</li>
+    <li><a href="https://raw.githubusercontent.com/PolinaSh-main/mopeers/master/outputs/dataset/mo_peers.csv"><code>outputs/dataset/mo_peers.csv</code></a> — тип, флаг расхождения, 15 сопоставимых, 5 сопоставимых в радиусе <span class="rkm"></span> км, лидеры роста, ранги.</li>
+    <li><a href="https://github.com/PolinaSh-main/mopeers/tree/master/outputs/dataset/api"><code>outputs/dataset/api/&lt;territory_id&gt;.json</code></a> — полная карточка муниципалитета.</li>
+    <li><a href="https://github.com/PolinaSh-main/mopeers/tree/master/outputs/typology"><code>outputs/typology/types.parquet</code></a> — типы; <a href="https://github.com/PolinaSh-main/mopeers/tree/master/outputs/dynamics"><code>outputs/dynamics/labels_by_window.parquet</code></a> — типы по 12 окнам.</li>
   </ul>
   <p class="small muted">Данные СберИндекса распространяются по лицензии CC BY-SA 4.0; производный датасет — по той же лицензии, с указанием источника «СберИндекс». Код — лицензия MIT.</p>
 </div></section>
 </main>
 
 <footer class="hide-embed"><div class="wrap">
-  Источники: СберИндекс — потребительские безналичные расходы на уровне муниципальных образований, индекс доступности рынков, справочник и границы МО, индекс мобильности (CC BY-SA 4.0); Росстат — База данных показателей муниципальных образований (через каталог «Точно»). Методы: KEFRiN — Shalileh S., Mirkin B. Community partitioning over feature-rich networks using an extended k-means method // Entropy, 2022; индексы AVI, AVU, ANUI и модульность — по библиотеке Pattern (С. Шалилех); анализ формальных понятий — fcapy.
+  Источники: СберИндекс — потребительские безналичные расходы на уровне муниципальных образований, индекс доступности рынков, справочник и границы МО, индекс мобильности (CC BY-SA 4.0); Росстат — База данных показателей муниципальных образований (через каталог «Точно»); реестр субъектов МСП ФНС (обработка — РЦНИ, data.rcsi.science, CC BY-SA 4.0); ночная освещённость VIIRS (Earth Observation Group, пересчёт OpenGeoHub, CC BY 4.0); список моногородов России (Википедия); цены акций — Московская биржа; новости — Google News. Методы: KEFRiN — Shalileh S., Mirkin B. Community partitioning over feature-rich networks using an extended k-means method // Entropy, 2022; индексы AVI, AVU, ANUI и модульность — по библиотеке Pattern (С. Шалилех); интервальные узорные структуры — Kaytoue M., Kuznetsov S. O. и др., 2011; разметка новостей — открытые модели Qwen3.5-35B-A3B и GigaChat 3.1. <a href="https://github.com/PolinaSh-main/mopeers">Репозиторий</a> · <a href="https://github.com/PolinaSh-main/mopeers/blob/master/report/methodology.pdf">отчёт</a>. Код — MIT, данные — CC BY-SA 4.0.
 </div></footer>
 <div class="tip" id="tip"></div>
 

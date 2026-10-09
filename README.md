@@ -40,7 +40,21 @@ mopeers all
 
 Шаг `download` скачивает исходные данные из официальных источников и проверяет SHA-256 пакета Data Sense. Если источник недоступен, данные берутся из снимка в релизе репозитория (проверка SHA-256); снимок можно взять и принудительно: `MOPEERS_SNAPSHOT=1 uv run mopeers download`. Шаг `data` скачивает из Базы данных показателей муниципальных образований Росстата только нужные показатели и только за 2022–2024 годы (каталог «Точно», чтение отдельных файлов из архивов по HTTP Range). Сторонний код — KEFRiN с генератором синтетических сетей и метрики библиотеки Pattern — скачивается с зафиксированных коммитов репозиториев авторов в `third_party/` и не изменяется.
 
-Полный прогон после скачивания данных занимает около 25 минут на ноутбуке (12 ядер, без GPU). Прогон с нуля в чистой копии репозитория воспроизводит побайтно все таблицы и наборы данных в `outputs/`.
+Полный прогон после скачивания данных занимает 25–35 минут на ноутбуке (12 ядер, без GPU).
+
+## Проверка результатов
+
+Прогон с нуля в чистой копии репозитория воспроизводит побайтно все таблицы и наборы данных в `outputs/` и лендинг `site/index.html`. Контрольные суммы SHA-256 всех 2 125 файлов — в `outputs/SHA256SUMS`; после прогона они сверяются стандартной командой:
+
+```bash
+sha256sum -c --quiet outputs/SHA256SUMS    # молчит, если всё совпало
+```
+
+Тесты (`tests/`) проверяют правила конвейера на маленьких примерах с известным ответом — разрешение ничьей при выборе K, заполнение пропусков по похожим МО, нулевую долю у района без городов, симметричность графа соседей — и целостность опубликованного продукта: 15 сопоставимых у каждого МО, МО нет среди собственных сопоставимых, лидеры роста — из числа сопоставимых, карточка JSON на каждый МО, совпадение контрольных сумм.
+
+```bash
+uv run pytest      # или: pip install pytest && pytest
+```
 
 Внешние проверки запускаются отдельно: `mopeers.sme` (реестр МСП; исходный файл 16 ГБ скачивается с data.rcsi.science после регистрации, агрегат по МО — `data/processed/sme.parquet`), `mopeers.nightlights` (ночная освещённость, Zenodo), `mopeers.monotowns` (моногорода и акции градообразующих компаний), `mopeers.news` (новости, разметка языковыми моделями на Kaggle, `kaggle/news_kernel.py`).
 
@@ -53,6 +67,7 @@ mopeers all
 | Путь | Содержимое |
 |---|---|
 | `src/mopeers/` | конвейер: `download`, `data`, `rosstat`, `features`, `network`, `cluster`, `synth`, `typology`, `dynamics`, `interpret`, `product`, `geo`, `site`; внешние проверки: `sme`, `nightlights`, `monotowns`, `news` |
+| `tests/` | проверки правил конвейера и опубликованных результатов |
 | `kaggle/` | ядро Kaggle для новостей и ручная разметка 120 заголовков для проверки моделей |
 | `configs/` | гиперпараметры и описания типов |
 | `outputs/network/` | сравнение правил рёбер |
@@ -76,9 +91,12 @@ mopeers all
 
 ## Литература
 
+Каждый метод и каждая интерпретация в отчёте снабжены ссылкой на источник; полный список из 25 работ — в конце [`report/methodology.md`](report/methodology.md). Основные:
+
 - Shalileh S., Mirkin B. Community partitioning over feature-rich networks using an extended k-means method // Entropy. 2022. Vol. 24, No. 5. P. 626.
 - Шалилех С., Антонов Е. Поведение индексов качества кластеризации атрибутированных сетей на синтетических данных с контролируемыми параметрами. Доклад на конференции AI Journey 2025. СберИндекс, 2025.
 - Ganter B., Kuznetsov S. O. Pattern structures and their projections // ICCS 2001. LNCS 2120. P. 129–142.
 - Kaytoue M., Kuznetsov S. O., Napoli A., Duplessis S. Mining gene expression data with pattern structures in formal concept analysis // Information Sciences. 2011. Vol. 181, No. 10.
-- Traag V. A., Waltman L., van Eck N. J. From Louvain to Leiden: guaranteeing well-connected communities // Scientific Reports. 2019. Vol. 9. 5233.
-- Elvidge C. D., Zhizhin M., Ghosh T., Hsu F.-C., Taneja J. Annual time series of global VIIRS nighttime lights derived from monthly averages: 2012 to 2019 // Remote Sensing. 2021. Vol. 13, No. 5. 922.
+- Зубаревич Н. В. Регионы России: неравенство, кризис, модернизация. М.: Независимый институт социальной политики, 2010.
+- Moretti E. Local multipliers // American Economic Review. 2010. Vol. 100, No. 2. P. 373–377.
+- Chetty R., Friedman J. N., Stepner M., Opportunity Insights Team. The economic impacts of COVID-19: evidence from a new public database built using private sector data // The Quarterly Journal of Economics. 2024. Vol. 139, No. 2. P. 829–889.

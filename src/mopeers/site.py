@@ -188,5 +188,5 @@ def build(cfg=None):
     html = html.replace("/*__D3__*/", libs["d3"]).replace("/*__TOPOJSON__*/", libs["topojson"])
     html = html.replace('"__DATA__"', json.dumps(data, ensure_ascii=False, separators=(",", ":")))
     html = html.replace('"__GEO__"', geo)
-    (site / "index.html").write_text(html, encoding="utf-8")
+    (site / "index.html").write_text(html, encoding="utf-8", newline="\n")
     print("site/index.html", round(len(html.encode("utf-8")) / 1e6, 2), "МБ")

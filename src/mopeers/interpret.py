@@ -1,37 +1,19 @@
 """Этап 6: интерпретация типов МО.
 
 1. Профиль типа — медианы признаков в исходных единицах и отклонения от страны в стандартных отклонениях.
-2. Описание через анализ формальных понятий (fcapy). Признаки бинаризуются по терцилям страны
-   («доля маркетплейсов: верхняя треть»). Для типа строится решётка понятий на его самых характерных атрибутах
-   и выбирается понятие, чей объём (все МО с этими атрибутами) лучше всего совпадает с типом.
-   Точность описания — доля объёма, попавшая в тип; полнота — доля типа, попавшая в объём.
+2. Описание интервальными узорными структурами (`interval_patterns`): для каждого типа — интервалы четырёх самых
+   характерных признаков по ядру типа; точность и полнота описания — на отложенной половине МО.
 3. Пороговые правила — дерево решений глубины `tree_depth`, обученное различать типы по исходным признакам.
 4. Сверка с категориями МО, которые использует лаборатория СберИндекса (пост от 29.12.2025): центры регионов,
    сельские территории, добывающие территории, ЗАТО.
 """
 import numpy as np
 import pandas as pd
-from fcapy.context import FormalContext
 from sklearn.tree import DecisionTreeClassifier, export_text
 
 from .cluster import feature_matrix
 from .config import load_config, path
 from .product import LABELS
-
-
-def binarize(raw):
-    """Терцили по стране → атрибуты «нижняя треть» / «верхняя треть» (средняя треть атрибута не даёт).
-
-    Терциль — по процентильному рангу со средним рангом для равных значений: у признака, где у большинства МО 0
-    (занятость в добыче), нули получают один ранг и попадают в одну треть, а не в обе.
-    """
-    cols = {}
-    for c in raw.columns:
-        r = raw[c].rank(pct=True, method="average")
-        name = LABELS.get(c, c)
-        cols[f"{name}: нижняя треть"] = (r <= 1 / 3).fillna(False)
-        cols[f"{name}: верхняя треть"] = (r > 2 / 3).fillna(False)
-    return pd.DataFrame(cols)
 
 
 def interval_patterns(raw, z, labels, ic, seed=0):
@@ -144,14 +126,14 @@ def build(cfg=None, labels=None):
 
     out = path(cfg, "outputs") / "interpret"
     out.mkdir(parents=True, exist_ok=True)
-    prof_z.to_csv(out / "profile_z.csv")
-    prof_raw.to_csv(out / "profile_median.csv")
+    prof_z.to_csv(out / "profile_z.csv", lineterminator="\n")
+    prof_raw.to_csv(out / "profile_median.csv", lineterminator="\n")
     fca.to_json(out / "interval_patterns.json", orient="records", force_ascii=False, indent=1)
-    overlap.to_csv(out / "interval_patterns_overlap.csv")
-    (out / "tree_rules.txt").write_text(f"точность дерева на обучении: {tree_acc:.3f}\n"
+    overlap.to_csv(out / "interval_patterns_overlap.csv", lineterminator="\n")
+    (out / "tree_rules.txt").write_text(newline="\n", data=f"точность дерева на обучении: {tree_acc:.3f}\n"
                                         f"точность при 5-кратной перекрёстной проверке: {tree_cv:.3f}\n\n{rules}",
                                         encoding="utf-8")
-    cross.to_csv(out / "lab_categories_by_type.csv")
+    cross.to_csv(out / "lab_categories_by_type.csv", lineterminator="\n")
     sizes = labels.value_counts().sort_index()
     for t in sizes.index:
         top = prof_z[t].sort_values()
@@ -207,7 +189,7 @@ def external_mobility(cfg=None):
     extra = {"eta2_without_spb": eta2_rest, "p_without_spb": p2, "n_without_spb": len(rest),
              "urban_share_spearman_r2": rho ** 2, "n_urban_known": int(ok.sum())}
     out = path(cfg, "outputs") / "interpret"
-    res.to_csv(out / "mobility_by_type.csv")
-    pd.Series({"n": n, "H": h, "p_value": p, "eta2": eta2, **extra}).to_csv(out / "mobility_test.csv")
+    res.to_csv(out / "mobility_by_type.csv", lineterminator="\n")
+    pd.Series({"n": n, "H": h, "p_value": p, "eta2": eta2, **extra}).to_csv(out / "mobility_test.csv", lineterminator="\n")
     print(res.round(2).to_string()); print(f"n = {n}, H = {h:.1f}, p = {p:.2e}, η² = {eta2:.2f}", extra)
     return res

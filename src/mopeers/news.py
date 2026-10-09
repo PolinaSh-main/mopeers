@@ -99,7 +99,7 @@ def build(cfg=None):
                       "share_true_manual": g.economy.mean(), "share_true_model": g[f"{m}_economy"].astype(bool).mean(),
                       "n": int(ok.sum())})
     agree = pd.DataFrame(agree).sort_values("kappa", ascending=False)
-    agree.to_csv(out / "labeler_agreement.csv", index=False)
+    agree.to_csv(out / "labeler_agreement.csv", index=False, lineterminator="\n")
     best = agree.model.iloc[0]
     groups = pd.DataFrame(mo_list(cfg)).set_index("id").group
     econ = news[news[f"{best}_economy"].fillna(False).astype(bool)]
@@ -115,7 +115,7 @@ def build(cfg=None):
         rows.append({"category": cat, "model": best, "share_divergent": a / max(a + b, 1),
                      "share_control": c / max(c + d, 1), "odds_ratio": odds, "p_value": p})
     t = pd.DataFrame(rows)
-    t.to_csv(out / "divergence_vs_control.csv", index=False)
+    t.to_csv(out / "divergence_vs_control.csv", index=False, lineterminator="\n")
     mo = pd.DataFrame({"group": groups, "titles": news.groupby("territory_id").size().reindex(groups.index).fillna(0)})
     mo["has"] = groups.index.isin(econ.territory_id.unique()).astype(int)
     mo["divergent"] = (mo.group == "расхождение").astype(int)
@@ -124,7 +124,7 @@ def build(cfg=None):
     vol = pd.DataFrame({"mean_titles": mo.groupby("group").titles.mean(), "median_titles": mo.groupby("group").titles.median(),
                         "mo_with_titles": mo[mo.titles > 0].groupby("group").size()})
     vol["logit_coef_divergent"], vol["logit_p_divergent"] = fit.params["divergent"], fit.pvalues["divergent"]
-    vol.to_csv(out / "divergence_adjusted.csv")
+    vol.to_csv(out / "divergence_adjusted.csv", lineterminator="\n")
     print(vol.round(3).to_string())
     print(agree.round(3).to_string())
     print("заголовков:", len(news), "| МО:", news.territory_id.nunique(), "| экономических:", len(econ))
